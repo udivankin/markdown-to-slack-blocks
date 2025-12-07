@@ -13,6 +13,14 @@ While Slack does offer native [markdown support in blocks](https://api.slack.com
 
 This library is particularly useful for apps that leverage **platform AI features** where you expect a **markdown response from an LLM**. Instead of sending raw markdown that Slack can't fully render, this library converts it to proper Block Kit JSON that displays correctly.
 
+### Additional Features
+
+Beyond basic markdown conversion, this library provides:
+
+- **Mention Support**: User, channel, user group, and team mentions (`@username`, `#channel`) are automatically detected and converted to Slack's native mention format when ID mappings are provided. Without mappings, mentions are rendered as plain text.
+- **Native Slack Dates**: Support for Slack's date formatting syntax, allowing dynamic date rendering that respects user timezones.
+- **Color Detection**: Optional color detection that converts color values (hex, rgb, named colors) into Slack's native color elements for rich visual formatting.
+
 ## How It Works
 
 This library uses a two-step conversion process:
