@@ -176,7 +176,6 @@ function parseMarkdown(markdown, options = {}) {
     return blocks;
 }
 function mapInlineNode(node, options) {
-    // console.log('Node:', node.type, node.value || node);
     if (node.type === 'text' || node.type === 'html') {
         // Pass empty object for style, processTextNode will handle it (and not attach if empty)
         return processTextNode(node.value, {}, options);
@@ -219,10 +218,6 @@ function flattenStyles(children, style, options) {
             return { ...el, style: mergedStyle };
         }
         // If it was empty before and we're not adding anything (shouldn't happen here if style has keys), just return
-        // But if el.style was undefined and style is {}, we want undefined.
-        // Logic: if mergedStyle has keys, use it. Else, if el had style, keep it? No, we want to flatten.
-        // Actually, if we merge {bold: true} with {}, we get {bold: true}.
-        // If we merge {} with {}, we get {}. We want to avoid {}.
         const { style: _, ...rest } = el;
         return rest;
     });
@@ -238,8 +233,6 @@ function processTextNode(text, style, options) {
     // 7. Emoji: :shortcode:
     // 8. Mapped Mention: @name
     // 9. Mapped Channel: #name
-    // Note: JS Regex stateful global matching
-    // We need to capture everything carefully.
     // Groups:
     // 1. Broadcast: (<!here>|<!channel>|<!everyone>)
     // 2. Mention: (<@([\w.-]+)>)
