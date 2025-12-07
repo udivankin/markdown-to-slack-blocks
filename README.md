@@ -137,3 +137,25 @@ The library validates that the IDs provided in the `mentions` option adhere to S
 - **Team IDs**: Must start with `T`.
 
 All IDs must be alphanumeric.
+
+### Handling Large Messages
+
+Slack limits messages to **~45 blocks** and **~12KB** of JSON. Use `splitBlocks` to split large outputs:
+
+```typescript
+import { markdownToBlocks, splitBlocks } from 'markdown-to-slack-blocks';
+
+const blocks = markdownToBlocks(veryLongMarkdown);
+const batches = splitBlocks(blocks);
+
+for (const batch of batches) {
+    await slack.postMessage({ channel, blocks: batch });
+}
+```
+
+**Options:**
+```typescript
+splitBlocks(blocks, { maxBlocks: 40, maxCharacters: 12000 });
+```
+
+The function splits at natural boundaries: between blocks first, then within `rich_text` elements, and finally within large code blocks by line.

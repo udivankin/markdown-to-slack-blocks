@@ -17,8 +17,9 @@ npm run clean         # Remove dist/ directory
 
 ### File Structure
 
-- `src/index.ts` – Main entry point, exports `markdownToBlocks()` function
+- `src/index.ts` – Main entry point, exports `markdownToBlocks()` and `splitBlocks()` functions
 - `src/parser.ts` – Core parsing logic using mdast AST
+- `src/splitter.ts` – Splits large block arrays to fit Slack's limits (40 blocks, 12k chars)
 - `src/types.ts` – TypeScript type definitions for Slack blocks
 - `src/validator.ts` – Input validation (user IDs, channel IDs, etc.)
 - `tests/` – Integration and unit tests
