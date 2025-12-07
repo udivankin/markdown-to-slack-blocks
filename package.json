@@ -34,11 +34,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/udi/markdown-to-slack-block-kit.git"
+    "url": "git+https://github.com/udivankin/markdown-to-slack-blocks.git"
   },
-  "homepage": "https://github.com/udi/markdown-to-slack-block-kit#readme",
+  "homepage": "https://github.com/udivankin/markdown-to-slack-blocks#readme",
   "bugs": {
-    "url": "https://github.com/udi/markdown-to-slack-block-kit/issues"
+    "url": "https://github.com/udivankin/markdown-to-slack-blocks/issues"
   },
   "engines": {
     "node": ">=18.0.0"

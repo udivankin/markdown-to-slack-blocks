@@ -1,4 +1,4 @@
-# Markdown to Slack Block Kit
+# Markdown to Slack Blocks
 
 A powerful library to convert Markdown text into Slack's Block Kit JSON format.
 
