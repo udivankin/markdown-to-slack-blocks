@@ -1,0 +1,58 @@
+{
+  "name": "markdown-to-slack-blocks",
+  "version": "1.0.0",
+  "description": "Convert Markdown to Slack Block Kit JSON format",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm test",
+    "test": "vitest"
+  },
+  "keywords": [
+    "slack",
+    "markdown",
+    "block-kit",
+    "converter",
+    "rich-text",
+    "parser"
+  ],
+  "author": "udi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/udi/markdown-to-slack-block-kit.git"
+  },
+  "homepage": "https://github.com/udi/markdown-to-slack-block-kit#readme",
+  "bugs": {
+    "url": "https://github.com/udi/markdown-to-slack-block-kit/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mdast-util-from-markdown": "2.0.2",
+    "mdast-util-gfm": "3.1.0",
+    "mdast-util-to-string": "4.0.0",
+    "micromark-extension-gfm": "3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "eslint": "9.39.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.15"
+  }
+}

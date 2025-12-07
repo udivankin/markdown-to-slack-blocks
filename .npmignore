@@ -1,0 +1,17 @@
+# Source files (only publish compiled dist)
+src/
+tests/
+tmp/
+
+# Config files
+tsconfig.json
+.gitignore
+.git/
+
+# Development files
+AGENTS.md
+*.test.ts
+
+# IDE
+.vscode/
+.idea/

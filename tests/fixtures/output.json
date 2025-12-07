@@ -1,0 +1,592 @@
+[
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Heading 1"
+    }
+  },
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Heading 2"
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_section",
+        "elements": [
+          {
+            "type": "text",
+            "text": "Heading 3",
+            "style": {
+              "bold": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_section",
+        "elements": [
+          {
+            "type": "text",
+            "text": "This is a paragraph with "
+          },
+          {
+            "type": "text",
+            "text": "bold",
+            "style": {
+              "bold": true
+            }
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "italic",
+            "style": {
+              "italic": true
+            }
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "strike",
+            "style": {
+              "strike": true
+            }
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "code",
+            "style": {
+              "code": true
+            }
+          },
+          {
+            "type": "text",
+            "text": ", and "
+          },
+          {
+            "type": "link",
+            "url": "https://example.com",
+            "text": "link"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Bullet 1"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Bullet 2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Number 1"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Number 2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_quote",
+        "elements": [
+          {
+            "type": "text",
+            "text": "This is a quote."
+          }
+        ]
+      },
+      {
+        "type": "rich_text_preformatted",
+        "elements": [
+          {
+            "type": "text",
+            "text": "console.log('Code block');"
+          }
+        ]
+      },
+      {
+        "type": "rich_text_preformatted",
+        "elements": [
+          {
+            "type": "text",
+            "text": "Hello there, I am preformatted block!\nI can have multiple paragraph breaks within the block."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "image",
+    "image_url": "https://picsum.photos/200",
+    "alt_text": "Image"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "table",
+    "rows": [
+      [
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Column 1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Column 2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Cell 1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Cell 2"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    ]
+  },
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Rich Text Elements"
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "User: "
+              },
+              {
+                "type": "user",
+                "user_id": "U12345"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Channel: "
+              },
+              {
+                "type": "channel",
+                "channel_id": "C00001"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Group: "
+              },
+              {
+                "type": "usergroup",
+                "usergroup_id": "S12345"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Broadcast: "
+              },
+              {
+                "type": "broadcast",
+                "range": "here"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Color: "
+              },
+              {
+                "type": "color",
+                "value": "#ff0000"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Team: "
+              },
+              {
+                "type": "team",
+                "team_id": "T123456"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Unknown User: "
+              },
+              {
+                "type": "text",
+                "text": "@unknown"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Unknown Channel: "
+              },
+              {
+                "type": "text",
+                "text": "#unknown"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Unknown Group: "
+              },
+              {
+                "type": "text",
+                "text": "@unknown_group"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Unknown Team: "
+              },
+              {
+                "type": "text",
+                "text": "@unknown_team"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Complex Lists"
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 1 item"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 1,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 item with "
+              },
+              {
+                "type": "text",
+                "text": "bold",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " text"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 item with "
+              },
+              {
+                "type": "text",
+                "text": "italic",
+                "style": {
+                  "italic": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " text"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 item with "
+              },
+              {
+                "type": "text",
+                "text": "strike",
+                "style": {
+                  "strike": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " text"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 item with "
+              },
+              {
+                "type": "text",
+                "text": "code",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " snippet"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 item with "
+              },
+              {
+                "type": "link",
+                "url": "https://example.com",
+                "text": "link"
+              }
+            ]
+          },
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 2 nested item"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 2,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 3 item"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Ordered Level 1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 1,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Ordered Level 2 with "
+              },
+              {
+                "type": "text",
+                "text": "bold",
+                "style": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
