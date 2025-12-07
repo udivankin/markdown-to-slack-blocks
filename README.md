@@ -13,6 +13,21 @@ While Slack does offer native [markdown support in blocks](https://api.slack.com
 
 This library is particularly useful for apps that leverage **platform AI features** where you expect a **markdown response from an LLM**. Instead of sending raw markdown that Slack can't fully render, this library converts it to proper Block Kit JSON that displays correctly.
 
+## How It Works
+
+This library uses a two-step conversion process:
+
+1. **Markdown → AST**: The markdown string is parsed into an Abstract Syntax Tree (AST) using [mdast-util-from-markdown](https://github.com/syntax-tree/mdast-util-from-markdown), with GitHub Flavored Markdown (GFM) support via [mdast-util-gfm](https://github.com/syntax-tree/mdast-util-gfm).
+
+2. **AST → Slack Blocks**: The AST is traversed and converted into Slack's Block Kit JSON format, mapping markdown elements to their corresponding Slack block types and rich text elements.
+
+### Key Libraries
+
+- **[mdast-util-from-markdown](https://github.com/syntax-tree/mdast-util-from-markdown)** — Parses markdown into an AST
+- **[mdast-util-gfm](https://github.com/syntax-tree/mdast-util-gfm)** — Adds GitHub Flavored Markdown support (tables, strikethrough, task lists)
+- **[micromark-extension-gfm](https://github.com/micromark/micromark-extension-gfm)** — Micromark extension for GFM syntax
+- **[mdast-util-to-string](https://github.com/syntax-tree/mdast-util-to-string)** — Extracts plain text from AST nodes
+
 ## Supported Output
 
 ### Blocks
