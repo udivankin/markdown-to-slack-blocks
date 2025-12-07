@@ -199,4 +199,5 @@ export interface MarkdownToBlocksOptions {
         teams?: Record<string, string>; // team name -> Team ID
     };
     detectColors?: boolean; // Default true
+    preferSectionBlocks?: boolean; // Default true - use section blocks for simple paragraphs
 }

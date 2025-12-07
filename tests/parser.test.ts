@@ -3,9 +3,23 @@ import { markdownToBlocks } from '../src/index';
 import { MarkdownToBlocksOptions } from '../src/types';
 
 describe('markdownToBlocks', () => {
-    it('converts plain text to a section block without empty styles', () => {
+    it('converts plain text to a section block by default', () => {
         const mkd = 'Hello world';
         const result = markdownToBlocks(mkd);
+        expect(result).toMatchObject([
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Hello world'
+                },
+            },
+        ]);
+    });
+
+    it('converts plain text to rich_text block when preferSectionBlocks is false', () => {
+        const mkd = 'Hello world';
+        const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
         expect(result).toMatchObject([
             {
                 type: 'rich_text',
@@ -33,9 +47,23 @@ describe('markdownToBlocks', () => {
         ]);
     });
 
-    it('converts bold and italic text', () => {
+    it('converts bold and italic text to mrkdwn in section block', () => {
         const mkd = 'This is *italic* and **bold**';
         const result = markdownToBlocks(mkd);
+        expect(result).toMatchObject([
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'This is _italic_ and *bold*'
+                },
+            },
+        ]);
+    });
+
+    it('converts bold and italic text to rich_text when preferSectionBlocks is false', () => {
+        const mkd = 'This is *italic* and **bold**';
+        const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
         expect(result).toMatchObject([
             {
                 type: 'rich_text',
@@ -212,10 +240,10 @@ describe('markdownToBlocks', () => {
         ]);
     });
 
-    describe('Rich Text Elements', () => {
+    describe('Rich Text Elements (preferSectionBlocks: false)', () => {
         it('converts User Mentions', () => {
             const mkd = '<@U123456>';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -227,7 +255,7 @@ describe('markdownToBlocks', () => {
 
         it('converts Team Mentions', () => {
             const mkd = '<!subteam^T123456>';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -239,7 +267,7 @@ describe('markdownToBlocks', () => {
 
         it('converts Channels', () => {
             const mkd = '<#C123456>';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -251,7 +279,7 @@ describe('markdownToBlocks', () => {
 
         it('converts Broadcasts', () => {
             const mkd = '<!here> <!channel> <!everyone>';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -269,7 +297,7 @@ describe('markdownToBlocks', () => {
 
         it('converts Colors', () => {
             const mkd = '#FF0000';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -282,7 +310,7 @@ describe('markdownToBlocks', () => {
         it('converts Dates', () => {
             // <!date^timestamp^format|fallback>
             const mkd = '<!date^1620000000^{date_short}|fallback>';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -299,7 +327,7 @@ describe('markdownToBlocks', () => {
 
         it('converts Emojis', () => {
             const mkd = ':smile:';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -311,7 +339,7 @@ describe('markdownToBlocks', () => {
 
         it('handles mixed content correctly', () => {
             const mkd = 'Hello <@U123> :wave:';
-            const result = markdownToBlocks(mkd);
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
             expect(result[0]).toMatchObject({
                 type: 'rich_text',
                 elements: [{
@@ -323,6 +351,122 @@ describe('markdownToBlocks', () => {
                         { type: 'emoji', name: 'wave' }
                     ]
                 }]
+            });
+        });
+    });
+
+    describe('Section Blocks with Mentions (preferSectionBlocks: true)', () => {
+        it('transforms @user mentions with mapping', () => {
+            const mkd = 'Hello @jdoe!';
+            const result = markdownToBlocks(mkd, {
+                mentions: { users: { 'jdoe': 'U12345' } }
+            });
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Hello <@U12345>!'
+                }
+            });
+        });
+
+        it('leaves unmapped @mentions as-is', () => {
+            const mkd = 'Hello @unknown!';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Hello @unknown!'
+                }
+            });
+        });
+
+        it('transforms #channel mentions with mapping', () => {
+            const mkd = 'Check out #general';
+            const result = markdownToBlocks(mkd, {
+                mentions: { channels: { 'general': 'C12345' } }
+            });
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Check out <#C12345>'
+                }
+            });
+        });
+
+        it('leaves unmapped #channel as-is', () => {
+            const mkd = 'Check out #unknown-channel';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Check out #unknown-channel'
+                }
+            });
+        });
+
+        it('transforms @userGroup mentions with mapping', () => {
+            const mkd = 'Ping @devs please';
+            const result = markdownToBlocks(mkd, {
+                mentions: { userGroups: { 'devs': 'S12345' } }
+            });
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Ping <!subteam^S12345> please'
+                }
+            });
+        });
+
+        it('transforms @here, @channel, @everyone to broadcasts', () => {
+            const mkd = '@here @channel @everyone';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: '<!here> <!channel> <!everyone>'
+                }
+            });
+        });
+
+        it('preserves already-formatted Slack mentions', () => {
+            const mkd = 'Hello <@U12345> and <#C67890>';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Hello <@U12345> and <#C67890>'
+                }
+            });
+        });
+
+        it('preserves emojis in mrkdwn', () => {
+            const mkd = 'Hello :wave: there';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Hello :wave: there'
+                }
+            });
+        });
+
+        it('preserves links in mrkdwn', () => {
+            const mkd = 'Check [this link](https://example.com)';
+            const result = markdownToBlocks(mkd);
+            expect(result[0]).toMatchObject({
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: 'Check <https://example.com|this link>'
+                }
             });
         });
     });

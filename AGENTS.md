@@ -14,6 +14,7 @@ npm run clean         # Remove dist/ directory
 
 - **Tech Stack:** TypeScript 5.9, Node.js ≥18, Vitest 4.0, mdast-util-from-markdown 2.0
 - **Purpose:** Convert Markdown strings into Slack Block Kit JSON format
+- **Key Options:** `mentions` (user/channel/group/team mappings), `detectColors`, `preferSectionBlocks`
 
 ### File Structure
 

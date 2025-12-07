@@ -4,6 +4,7 @@ import { gfm } from 'micromark-extension-gfm';
 import { gfmFromMarkdown } from 'mdast-util-gfm';
 import {
     Block,
+    SectionBlock,
     RichTextBlock,
     RichTextElement,
     RichTextSectionElement,
@@ -44,15 +45,26 @@ export function parseMarkdown(markdown: string, options: MarkdownToBlocksOptions
                     },
                 });
             } else {
-                blocks.push({
-                    type: 'rich_text',
-                    elements: [
-                        {
-                            type: 'rich_text_section',
-                            elements: [{ type: 'text', text: text, style: { bold: true } }],
+                // H3+ headings use section blocks when preferSectionBlocks is enabled
+                if (options.preferSectionBlocks !== false) {
+                    blocks.push({
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: `*${inlineNodesToMrkdwn(node.children, options)}*`,
                         },
-                    ],
-                });
+                    });
+                } else {
+                    blocks.push({
+                        type: 'rich_text',
+                        elements: [
+                            {
+                                type: 'rich_text_section',
+                                elements: [{ type: 'text', text: text, style: { bold: true } }],
+                            },
+                        ],
+                    });
+                }
             }
         } else if (node.type === 'paragraph') {
             if (node.children.length === 1 && node.children[0].type === 'image') {
@@ -64,10 +76,22 @@ export function parseMarkdown(markdown: string, options: MarkdownToBlocksOptions
                     alt_text: imageNode.alt || 'Image',
                 });
             } else {
-                currentRichTextElements.push({
-                    type: 'rich_text_section',
-                    elements: node.children.flatMap((child: any) => mapInlineNode(child, options)),
-                });
+                // Use section blocks for paragraphs when preferSectionBlocks is enabled (default)
+                if (options.preferSectionBlocks !== false) {
+                    flushRichText();
+                    blocks.push({
+                        type: 'section',
+                        text: {
+                            type: 'mrkdwn',
+                            text: inlineNodesToMrkdwn(node.children, options),
+                        },
+                    });
+                } else {
+                    currentRichTextElements.push({
+                        type: 'rich_text_section',
+                        elements: node.children.flatMap((child: any) => mapInlineNode(child, options)),
+                    });
+                }
             }
         } else if (node.type === 'list') {
             // Helper function to recursively process lists with proper indentation
@@ -126,11 +150,15 @@ export function parseMarkdown(markdown: string, options: MarkdownToBlocksOptions
             for (const listElement of listElements) {
                 currentRichTextElements.push(listElement);
             }
+            // Start a new rich_text block after each top-level list for visual separation
+            flushRichText();
         } else if (node.type === 'code') {
             currentRichTextElements.push({
                 type: 'rich_text_preformatted',
                 elements: [{ type: 'text', text: node.value }],
             });
+            // Start a new rich_text block after code blocks for visual separation
+            flushRichText();
         } else if (node.type === 'blockquote') {
             currentRichTextElements.push({
                 type: 'rich_text_quote',
@@ -142,6 +170,8 @@ export function parseMarkdown(markdown: string, options: MarkdownToBlocksOptions
                         return [];
                     })
             });
+            // Start a new rich_text block after blockquotes for visual separation
+            flushRichText();
         } else if (node.type === 'thematicBreak') {
             flushRichText();
             blocks.push({ type: 'divider' });
@@ -370,4 +400,141 @@ function processTextNode(text: string, style: RichTextStyle, options: MarkdownTo
     }
 
     return elements;
+}
+
+/**
+ * Convert inline markdown nodes to Slack mrkdwn format (text string).
+ * Used for section blocks where we need mrkdwn text instead of rich_text elements.
+ */
+function inlineNodesToMrkdwn(nodes: any[], options: MarkdownToBlocksOptions): string {
+    return nodes.map((node: any) => inlineNodeToMrkdwn(node, options)).join('');
+}
+
+function inlineNodeToMrkdwn(node: any, options: MarkdownToBlocksOptions): string {
+    if (node.type === 'text') {
+        return convertTextToMrkdwn(node.value, options);
+    } else if (node.type === 'html') {
+        // HTML nodes like <!date...> are passed through as-is
+        return node.value;
+    } else if (node.type === 'emphasis') {
+        const inner = inlineNodesToMrkdwn(node.children, options);
+        return `_${inner}_`;
+    } else if (node.type === 'strong') {
+        const inner = inlineNodesToMrkdwn(node.children, options);
+        return `*${inner}*`;
+    } else if (node.type === 'delete') {
+        const inner = inlineNodesToMrkdwn(node.children, options);
+        return `~${inner}~`;
+    } else if (node.type === 'inlineCode') {
+        return `\`${node.value}\``;
+    } else if (node.type === 'link') {
+        const text = toString(node);
+        return `<${node.url}|${text}>`;
+    } else if (node.type === 'image') {
+        return `<${node.url}|${node.alt || 'Image'}>`;
+    }
+    return '';
+}
+
+/**
+ * Convert text to mrkdwn format, transforming mentions where mappings exist.
+ * For mentions not in the map, they are left as-is (e.g., @alex stays @alex).
+ */
+function convertTextToMrkdwn(text: string, options: MarkdownToBlocksOptions): string {
+    // Regex to find:
+    // 1. Broadcast: <!here> | <!channel> | <!everyone>
+    // 2. Mention: <@ID>
+    // 3. Channel: <#ID>
+    // 4. Team: <!subteam^ID>
+    // 5. Date: <!date^timestamp^format|fallback>
+    // 6. Emoji: :shortcode:
+    // 7. Mapped Mention: @name
+    // 8. Mapped Channel: #name (only transform if in map or hex color)
+
+    const regex = /(<!here>|<!channel>|<!everyone>)|(<@([\w.-]+)>)|(#[0-9a-fA-F]{6})|(<#([\w.-]+)>)|(<!subteam\^([\w.-]+)>)|(<!date\^(\d+)\^([^|]+)\|([^>]+)>)|(:([\w+-]+):)|(@([\w.-]+))|(#([\w.-]+))/g;
+
+    let result = '';
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        const fullMatch = match[0];
+        const index = match.index;
+
+        // Add text before the match
+        if (index > lastIndex) {
+            result += text.substring(lastIndex, index);
+        }
+
+        if (match[1]) { // Broadcast: <!here>
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[3]) { // Mention: <@ID>
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[4]) { // Color: #Hex - leave as-is (not a channel)
+            result += fullMatch;
+
+        } else if (match[6]) { // Channel: <#ID>
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[8]) { // Team: <!subteam^ID>
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[10]) { // Date: <!date^...|...>
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[13]) { // Emoji: :name:
+            // Already in Slack format
+            result += fullMatch;
+
+        } else if (match[15]) { // Mapped Mention: @name
+            const name = match[16];
+
+            // 1. Check Broadcasts (@here, @channel, @everyone)
+            if (['here', 'channel', 'everyone'].includes(name)) {
+                result += `<!${name}>`;
+            }
+            // 2. Check Users
+            else if (options.mentions?.users && options.mentions.users[name]) {
+                result += `<@${options.mentions.users[name]}>`;
+            }
+            // 3. Check User Groups
+            else if (options.mentions?.userGroups && options.mentions.userGroups[name]) {
+                result += `<!subteam^${options.mentions.userGroups[name]}>`;
+            }
+            // 4. Check Teams
+            else if (options.mentions?.teams && options.mentions.teams[name]) {
+                result += `<!subteam^${options.mentions.teams[name]}>`;
+            }
+            // 5. Not found - leave as-is
+            else {
+                result += fullMatch;
+            }
+
+        } else if (match[17]) { // Mapped Channel: #name
+            const name = match[18];
+
+            if (options.mentions?.channels && options.mentions.channels[name]) {
+                result += `<#${options.mentions.channels[name]}>`;
+            } else {
+                // Not found - leave as-is
+                result += fullMatch;
+            }
+        }
+
+        lastIndex = regex.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+        result += text.substring(lastIndex);
+    }
+
+    return result;
 }

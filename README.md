@@ -17,7 +17,7 @@ This library is particularly useful for apps that leverage **platform AI feature
 
 Beyond basic markdown conversion, this library provides:
 
-- **Mention Support**: User, channel, user group, and team mentions (`@username`, `#channel`) are automatically detected and converted to Slack's native mention format when ID mappings are provided. Without mappings, mentions are rendered as plain text.
+- **Mention Support**: User, channel, user group, and team mentions (`@username`, `#channel`) are automatically detected and converted to Slack's native mention format when ID mappings are provided. Without mappings, mentions are rendered as plain text in some cases.
 - **Native Slack Dates**: Support for Slack's date formatting syntax, allowing dynamic date rendering that respects user timezones.
 - **Color Detection**: Optional color detection that converts color values (hex, rgb, named colors) into Slack's native color elements for rich visual formatting.
 
@@ -122,7 +122,8 @@ const options = {
         userGroups: { 'engineers': 'S123456' },
         teams: { 'myteam': 'T123456' }
     },
-    detectColors: true
+    detectColors: true,
+    preferSectionBlocks: true // default: true
 };
 
 const blocks = markdownToBlocks(markdown, options);

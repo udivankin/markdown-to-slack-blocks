@@ -150,5 +150,6 @@ export interface MarkdownToBlocksOptions {
         teams?: Record<string, string>;
     };
     detectColors?: boolean;
+    preferSectionBlocks?: boolean;
 }
 //# sourceMappingURL=types.d.ts.map

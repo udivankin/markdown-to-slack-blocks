@@ -17,7 +17,8 @@ describe('Rich Text Mappings', () => {
                 'devs': 'S99999'
             }
         },
-        detectColors: true
+        detectColors: true,
+        preferSectionBlocks: false
     };
 
     it('maps user mentions', () => {
@@ -100,3 +101,4 @@ describe('Rich Text Mappings', () => {
         ]);
     });
 });
+

@@ -2,6 +2,8 @@
 ## Heading 2
 ### Heading 3
 
+This is a simple paragraph without any formatting.
+
 This is a paragraph with **bold**, *italic*, ~strike~, `code`, and [link](https://example.com).
 
 - Bullet 1
@@ -15,6 +17,8 @@ This is a paragraph with **bold**, *italic*, ~strike~, `code`, and [link](https:
 ```javascript
 console.log('Code block');
 ```
+
+This is a paragraph with text styles: **bold**, *italic*, ~strike~, `code`. And with non-formatted mentions: @jdoe, @here, @devs, #general. And with formatted mentions: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>.
 
 ```
 Hello there, I am preformatted block!

@@ -14,87 +14,29 @@
     }
   },
   {
-    "type": "rich_text",
-    "elements": [
-      {
-        "type": "rich_text_section",
-        "elements": [
-          {
-            "type": "text",
-            "text": "Heading 3",
-            "style": {
-              "bold": true
-            }
-          }
-        ]
-      }
-    ]
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "*Heading 3*"
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "This is a simple paragraph without any formatting."
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "This is a paragraph with *bold*, _italic_, ~strike~, `code`, and <https://example.com|link>."
+    }
   },
   {
     "type": "rich_text",
     "elements": [
-      {
-        "type": "rich_text_section",
-        "elements": [
-          {
-            "type": "text",
-            "text": "This is a paragraph with "
-          },
-          {
-            "type": "text",
-            "text": "bold",
-            "style": {
-              "bold": true
-            }
-          },
-          {
-            "type": "text",
-            "text": ", "
-          },
-          {
-            "type": "text",
-            "text": "italic",
-            "style": {
-              "italic": true
-            }
-          },
-          {
-            "type": "text",
-            "text": ", "
-          },
-          {
-            "type": "text",
-            "text": "strike",
-            "style": {
-              "strike": true
-            }
-          },
-          {
-            "type": "text",
-            "text": ", "
-          },
-          {
-            "type": "text",
-            "text": "code",
-            "style": {
-              "code": true
-            }
-          },
-          {
-            "type": "text",
-            "text": ", and "
-          },
-          {
-            "type": "link",
-            "url": "https://example.com",
-            "text": "link"
-          },
-          {
-            "type": "text",
-            "text": "."
-          }
-        ]
-      },
       {
         "type": "rich_text_list",
         "style": "bullet",
@@ -119,7 +61,12 @@
             ]
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
       {
         "type": "rich_text_list",
         "style": "ordered",
@@ -144,7 +91,12 @@
             ]
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
       {
         "type": "rich_text_quote",
         "elements": [
@@ -153,7 +105,12 @@
             "text": "This is a quote."
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
       {
         "type": "rich_text_preformatted",
         "elements": [
@@ -162,7 +119,19 @@
             "text": "console.log('Code block');"
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "This is a paragraph with text styles: *bold*, _italic_, ~strike~, `code`. And with non-formatted mentions: <@U12345>, <!here>, <!subteam^S12345>, #general. And with formatted mentions: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>."
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
       {
         "type": "rich_text_preformatted",
         "elements": [
@@ -547,7 +516,12 @@
             ]
           }
         ]
-      },
+      }
+    ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
       {
         "type": "rich_text_list",
         "style": "ordered",
