@@ -1,7 +1,4 @@
-/**
- * Regenerates test fixtures from input.md
- */
-import { markdownToBlocks } from '../src/index';
+import { markdownToBlocks, splitBlocks } from '../src/index';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -40,3 +37,15 @@ fs.writeFileSync(
     JSON.stringify(sectionBlocks, null, 2)
 );
 console.log('✓ Generated output_sections.json');
+
+// Generate long content output (splitBlocks)
+const longMdPath = path.join(fixturesDir, 'input_long.md');
+const longMarkdown = fs.readFileSync(longMdPath, 'utf-8');
+const longBlocks = markdownToBlocks(longMarkdown);
+const longBatches = splitBlocks(longBlocks);
+
+fs.writeFileSync(
+    path.join(fixturesDir, 'output_long.json'),
+    JSON.stringify(longBatches, null, 2)
+);
+console.log('✓ Generated output_long.json');

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { splitBlocks } from '../src/splitter';
-import { Block, RichTextBlock } from '../src/types';
+import { Block, RichTextBlock, SectionBlock, HeaderBlock } from '../src/types';
 
 describe('splitBlocks', () => {
     // Helper to create a simple rich_text block
@@ -196,6 +196,116 @@ describe('splitBlocks', () => {
             // Should still include the block even if oversized
             expect(result.length).toBeGreaterThanOrEqual(1);
             expect(result.some(batch => batch.some(b => b.type === 'table'))).toBe(true);
+        });
+    });
+
+    describe('section text character limit splitting', () => {
+        it('splits section blocks with text larger than 3000 characters', () => {
+            const longText = 'x'.repeat(3000) + 'y'.repeat(500); // 3500 chars
+            const section: SectionBlock = {
+                type: 'section',
+                text: { type: 'mrkdwn', text: longText }
+            };
+            const result = splitBlocks([section]);
+
+            // Should be split into 2 blocks (3000 chars + 500 chars)
+            // They might be in same batch or different batches depending on limits, 
+            // but here we check if the input block was split into multiple valid blocks.
+            // Since 3500 chars fits in 12000 limit, they should be in one batch.
+            expect(result).toHaveLength(1);
+            expect(result[0]).toHaveLength(2);
+
+            const block1 = result[0][0] as SectionBlock;
+            const block2 = result[0][1] as SectionBlock;
+
+            expect(block1.type).toBe('section');
+            expect(block2.type).toBe('section');
+            expect(block1.text?.text).toHaveLength(3000);
+            expect(block2.text?.text).toHaveLength(500);
+            expect(block1.text?.text.startsWith('x')).toBe(true);
+            expect(block2.text?.text.startsWith('y')).toBe(true);
+        });
+
+        it('splits validly at newlines near limit', () => {
+            // 2900 'a's, newline, 200 'b's. Total 3101.
+            // Split should happen at newline if possible.
+            // But 2900 < 3000. So first chunk could be 2900+newline+99 'b's = 3000.
+            // Wait, logic says: find last newline in the slice.
+            // If slice is 3000 chars. Last newline is at 2900.
+            // So split at 2900.
+
+            const part1 = 'a'.repeat(2900);
+            const part2 = 'b'.repeat(200);
+            const text = `${part1}\n${part2}`; // 3101 chars
+
+            const section: SectionBlock = {
+                type: 'section',
+                text: { type: 'mrkdwn', text }
+            };
+
+            const result = splitBlocks([section]);
+            expect(result).toHaveLength(1);
+            expect(result[0]).toHaveLength(2);
+
+            const block1 = result[0][0] as SectionBlock;
+            const block2 = result[0][1] as SectionBlock;
+
+            // Logic: chunkString slices 3000. 
+            // It searches for last newline in that 3000 chars.
+            // Newline is at 2900.
+            // So it splits there.
+            expect(block1.text?.text).toBe(part1);
+            // Remaining is start from newline+1? Logic:
+            // "chunk = chunk.slice(0, lastNewline); current = current.slice(lastNewline + 1);"
+            // So block1 text is `part1`.
+            // block2 text is `part2`.
+
+            expect(block2.text?.text).toBe(part2);
+        });
+
+        it('preserves fields and accessories on the first split block', () => {
+            const longText = 'x'.repeat(3500);
+            const section: SectionBlock = {
+                type: 'section',
+                text: { type: 'mrkdwn', text: longText },
+                block_id: 'test_block_id',
+                fields: [{ type: 'plain_text', text: 'Field' }],
+                accessory: { type: 'image', image_url: 'http://example.com', alt_text: 'alt' }
+            };
+
+            const result = splitBlocks([section]);
+            expect(result[0]).toHaveLength(2);
+
+            const block1 = result[0][0] as SectionBlock;
+            const block2 = result[0][1] as SectionBlock;
+
+            expect(block1.block_id).toBe('test_block_id');
+            expect(block1.fields).toBeDefined();
+            expect(block1.accessory).toBeDefined();
+
+            expect(block2.block_id).toBeUndefined();
+            expect(block2.fields).toBeUndefined();
+            expect(block2.accessory).toBeUndefined();
+        });
+
+        it('splits header blocks', () => {
+            const longText = 'H'.repeat(3500);
+            const header: HeaderBlock = {
+                type: 'header',
+                text: { type: 'plain_text', text: longText }
+            };
+
+            const result = splitBlocks([header]);
+            expect(result[0]).toHaveLength(2);
+
+            const block1 = result[0][0] as HeaderBlock;
+            const block2 = result[0][1] as SectionBlock; // Second part becomes section
+
+            expect(block1.type).toBe('header');
+            expect(block1.text.text).toHaveLength(3000);
+
+            expect(block2.type).toBe('section');
+            expect(block2.text?.text).toHaveLength(500);
         });
     });
 });

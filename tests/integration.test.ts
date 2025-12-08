@@ -86,4 +86,32 @@ describe('Integration Test', () => {
         const totalBlocks = batches.reduce((sum, batch) => sum + batch.length, 0);
         expect(totalBlocks).toBe(blocks.length);
     });
+
+    it('converts input_long.md to expected batch blocks JSON in output_long.json', () => {
+        const mdPath = path.join(__dirname, 'fixtures', 'input_long.md');
+        const jsonPath = path.join(__dirname, 'fixtures', 'output_long.json');
+
+        const markdown = fs.readFileSync(mdPath, 'utf-8');
+        const expectedBatches = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+
+        const blocks = markdownToBlocks(markdown);
+        const result = splitBlocks(blocks);
+
+        // Check overall structure
+        expect(result.length).toBe(expectedBatches.length);
+        expect(result).toEqual(expectedBatches);
+
+        // Verify limits are respected for implicit check
+        for (const batch of result) {
+            expect(batch.length).toBeLessThanOrEqual(40);
+            expect(JSON.stringify(batch).length).toBeLessThanOrEqual(12000);
+
+            // Verify text section limit
+            for (const block of batch) {
+                if (block.type === 'section' && block.text?.type === 'mrkdwn') {
+                    expect(block.text.text.length).toBeLessThanOrEqual(3000);
+                }
+            }
+        }
+    });
 });
