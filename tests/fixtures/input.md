@@ -31,7 +31,9 @@ I can have multiple paragraph breaks within the block.
 
 | Column 1 | Column 2 |
 | --- | --- |
-| Cell 1 | Cell 2 |
+| Cell can contain multiple paragraphs. | Paragraphs can include text styles: **bold**, \n *italic*, ~strike~, `code`. \n and  formatted mentions only: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>. \n Must be manually split with newlines. |
+|  |  |
+| Cell can contain multiple paragraphs. | Cells |
 
 ## Rich Text Elements
 - User: @jdoe

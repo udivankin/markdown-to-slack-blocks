@@ -112,7 +112,7 @@ console.log(JSON.stringify(blocks, null, 2));
 
 ### Options
 
-You can pass an options object to `markdownToBlocks`, otherwise the mentions will be rendered as text:
+You can pass an options object to `markdownToBlocks`, otherwise the mentions will be rendered as text in some blocks (e.g. tables):
 
 ```typescript
 const options = {
@@ -141,7 +141,7 @@ All IDs must be alphanumeric.
 
 ### Handling Large Messages
 
-Slack limits messages to **~45 blocks** and **~12KB** of JSON. Use `splitBlocks` to split large outputs:
+Slack limits messages to **~45 blocks** and **~12KB** of JSON. Use `splitBlocks` to split large outputs into several messages:
 
 ```typescript
 import { markdownToBlocks, splitBlocks } from 'markdown-to-slack-blocks';

@@ -1,6 +1,6 @@
 {
   "name": "markdown-to-slack-blocks",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Convert Markdown to Slack Block Kit JSON format",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,7 +20,8 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build && npm test",
-    "test": "vitest"
+    "test": "vitest",
+    "generate-fixtures": "npx tsx scripts/generate-fixtures.ts"
   },
   "keywords": [
     "slack",

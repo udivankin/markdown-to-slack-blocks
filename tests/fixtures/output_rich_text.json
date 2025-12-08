@@ -378,7 +378,7 @@
               "elements": [
                 {
                   "type": "text",
-                  "text": "Cell 1"
+                  "text": "Cell can contain multiple paragraphs."
                 }
               ]
             }
@@ -392,7 +392,141 @@
               "elements": [
                 {
                   "type": "text",
-                  "text": "Cell 2"
+                  "text": "Paragraphs can include text styles: "
+                },
+                {
+                  "type": "text",
+                  "text": "bold",
+                  "style": {
+                    "bold": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": ", \\n "
+                },
+                {
+                  "type": "text",
+                  "text": "italic",
+                  "style": {
+                    "italic": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "text",
+                  "text": "strike",
+                  "style": {
+                    "strike": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "text",
+                  "text": "code",
+                  "style": {
+                    "code": true
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": ". \\n and  formatted mentions only: "
+                },
+                {
+                  "type": "user",
+                  "user_id": "U12345"
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "channel",
+                  "channel_id": "C00001"
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "user",
+                  "user_id": "S12345"
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "user",
+                  "user_id": "here"
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "user",
+                  "user_id": "T123456"
+                },
+                {
+                  "type": "text",
+                  "text": ". \\n Must be manually split with newlines."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": []
+            }
+          ]
+        },
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": []
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Cell can contain multiple paragraphs."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rich_text",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "Cells"
                 }
               ]
             }
