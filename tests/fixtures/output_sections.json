@@ -126,7 +126,7 @@
     "type": "section",
     "text": {
       "type": "mrkdwn",
-      "text": "This is a paragraph with text styles: *bold*, _italic_, ~strike~, `code`. And with non-formatted mentions: <@U12345>, <!here>, <!subteam^S12345>, #general. And with formatted mentions: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>."
+      "text": "This is a paragraph with text styles: *bold*, _italic_, ~strike~, `code`. And with non-formatted mentions: <@U12345>, <!here>, <!subteam^S12345>, #general. And with formatted mentions: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>.\nMentiones and styles inside code block are ignored: `<@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~ `"
     }
   },
   {
@@ -137,7 +137,7 @@
         "elements": [
           {
             "type": "text",
-            "text": "Hello there, I am preformatted block!\nI can have multiple paragraph breaks within the block."
+            "text": "Hello there, I am preformatted block!\nI can have multiple paragraph breaks within the block.\nMentiones and styles inside preformatted block are ignored: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~"
           }
         ]
       }

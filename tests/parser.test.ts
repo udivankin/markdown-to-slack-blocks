@@ -337,6 +337,18 @@ describe('markdownToBlocks', () => {
             });
         });
 
+        it('keeps inline code mentions literal', () => {
+            const mkd = '`<@U123>`';
+            const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+            expect(result[0]).toMatchObject({
+                type: 'rich_text',
+                elements: [{
+                    type: 'rich_text_section',
+                    elements: [{ type: 'text', text: '<@U123>', style: { code: true } }]
+                }]
+            });
+        });
+
         it('handles mixed content correctly', () => {
             const mkd = 'Hello <@U123> :wave:';
             const result = markdownToBlocks(mkd, { preferSectionBlocks: false });

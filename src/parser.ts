@@ -259,6 +259,14 @@ function flattenStyles(children: any[], style: RichTextStyle, options: MarkdownT
 }
 
 function processTextNode(text: string, style: RichTextStyle, options: MarkdownToBlocksOptions): RichTextSectionElement[] {
+    // Do not parse mentions/colors inside code-styled text; treat as literal.
+    if (style.code) {
+        const literal: RichTextText = { type: 'text', text };
+        if (Object.keys(style).length > 0) {
+            literal.style = style;
+        }
+        return [literal];
+    }
     // Regex for:
     // 1. Broadcast: <!here> | <!channel> | <!everyone>
     // 2. Mention: <@U...>

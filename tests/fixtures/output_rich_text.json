@@ -313,7 +313,14 @@
           },
           {
             "type": "text",
-            "text": "."
+            "text": ".\nMentiones and styles inside code block are ignored: "
+          },
+          {
+            "type": "text",
+            "text": "<@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~ ",
+            "style": {
+              "code": true
+            }
           }
         ]
       },
@@ -322,7 +329,7 @@
         "elements": [
           {
             "type": "text",
-            "text": "Hello there, I am preformatted block!\nI can have multiple paragraph breaks within the block."
+            "text": "Hello there, I am preformatted block!\nI can have multiple paragraph breaks within the block.\nMentiones and styles inside preformatted block are ignored: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~"
           }
         ]
       }

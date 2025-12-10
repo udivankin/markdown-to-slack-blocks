@@ -19,10 +19,12 @@ console.log('Code block');
 ```
 
 This is a paragraph with text styles: **bold**, *italic*, ~strike~, `code`. And with non-formatted mentions: @jdoe, @here, @devs, #general. And with formatted mentions: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>.
+Mentiones and styles inside code block are ignored: `<@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~ ` 
 
 ```
 Hello there, I am preformatted block!
 I can have multiple paragraph breaks within the block.
+Mentiones and styles inside preformatted block are ignored: <@U12345>, <#C00001>, <@S12345>, <@here>, <@T123456>, @jdoe, @here, @devs, #general, **bold**, *italic*, ~strike~
 ```
 
 ![Image](https://picsum.photos/200)

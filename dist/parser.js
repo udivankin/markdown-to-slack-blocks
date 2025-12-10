@@ -254,6 +254,14 @@ function flattenStyles(children, style, options) {
     });
 }
 function processTextNode(text, style, options) {
+    // Do not parse mentions/colors inside code-styled text; treat as literal.
+    if (style.code) {
+        const literal = { type: 'text', text };
+        if (Object.keys(style).length > 0) {
+            literal.style = style;
+        }
+        return [literal];
+    }
     // Regex for:
     // 1. Broadcast: <!here> | <!channel> | <!everyone>
     // 2. Mention: <@U...>
