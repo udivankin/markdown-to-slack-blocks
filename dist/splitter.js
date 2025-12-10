@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.splitBlocks = splitBlocks;
+exports.splitBlocksWithText = splitBlocksWithText;
 const DEFAULT_MAX_BLOCKS = 40;
 const DEFAULT_MAX_CHARACTERS = 12000;
 const DEFAULT_MAX_TEXT_SECTION_CHARACTERS = 3000;
@@ -82,6 +83,16 @@ function splitBlocks(blocks, options) {
     }
     flushBatch();
     return result.length > 0 ? result : [[]];
+}
+/**
+ * Splits blocks and also returns a plain-text fallback for each batch, suitable for postMessage `text`.
+ */
+function splitBlocksWithText(blocks, options) {
+    const batches = splitBlocks(blocks, options);
+    return batches.map(batch => ({
+        text: blocksToPlainText(batch),
+        blocks: batch,
+    }));
 }
 /**
  * Splits a large RichTextBlock into smaller RichTextBlocks by splitting its elements
@@ -314,4 +325,90 @@ function chunkString(str, limit) {
         current = current.slice(limit);
     }
     return chunks;
+}
+/**
+ * Generates a lightweight plain-text fallback from a block batch.
+ */
+function blocksToPlainText(blocks) {
+    const parts = [];
+    const renderTextObject = (text) => text?.text ?? '';
+    const renderRichTextSectionElement = (element) => {
+        switch (element.type) {
+            case 'text':
+                return element.text;
+            case 'link':
+                return element.text ?? element.url;
+            case 'emoji':
+                return `:${element.name}:`;
+            case 'date':
+                return element.fallback ?? new Date(element.timestamp * 1000).toISOString();
+            case 'user':
+                return `<@${element.user_id}>`;
+            case 'usergroup':
+                return `<!subteam^${element.usergroup_id}>`;
+            case 'team':
+                return `<team:${element.team_id}>`;
+            case 'channel':
+                return `<#${element.channel_id}>`;
+            case 'broadcast':
+                return element.range === 'here' ? `<!here>` : element.range === 'channel' ? `<!channel>` : `<!everyone>`;
+            case 'color':
+                return element.value;
+            default:
+                return '';
+        }
+    };
+    const renderRichTextElement = (element) => {
+        switch (element.type) {
+            case 'rich_text_section':
+                return element.elements.map(renderRichTextSectionElement).filter(Boolean).join('');
+            case 'rich_text_list':
+                return element.elements
+                    .map((item, idx) => {
+                    const marker = element.style === 'ordered' ? `${(element.offset ?? 1) + idx}. ` : '- ';
+                    return marker + item.elements.map(renderRichTextSectionElement).join('');
+                })
+                    .join('\n');
+            case 'rich_text_preformatted':
+                return element.elements.map(renderRichTextSectionElement).join('');
+            case 'rich_text_quote':
+                return element.elements.map(renderRichTextSectionElement).map(line => `> ${line}`).join('\n');
+            default:
+                return '';
+        }
+    };
+    const renderRichTextBlock = (block) => {
+        return block.elements.map(renderRichTextElement).filter(Boolean).join('\n');
+    };
+    const renderBlock = (block) => {
+        switch (block.type) {
+            case 'section':
+                return renderTextObject(block.text);
+            case 'header':
+                return renderTextObject(block.text);
+            case 'context':
+                return block.elements
+                    .map(el => el.text ?? '')
+                    .filter(Boolean)
+                    .join(' ');
+            case 'rich_text':
+                return renderRichTextBlock(block);
+            case 'divider':
+                return '---';
+            case 'image':
+                return block.title?.text ?? block.alt_text ?? 'Image';
+            case 'table':
+                return block.rows
+                    .map(row => row.map(renderRichTextBlock).join(' | '))
+                    .join('\n');
+            default:
+                return '';
+        }
+    };
+    for (const block of blocks) {
+        const rendered = renderBlock(block).trim();
+        if (rendered)
+            parts.push(rendered);
+    }
+    return parts.join('\n\n');
 }

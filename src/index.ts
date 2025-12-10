@@ -4,7 +4,7 @@ import { validateOptions } from './validator';
 
 // Re-export types for consumers
 export * from './types';
-export { splitBlocks, SplitBlocksOptions } from './splitter';
+export { splitBlocks, splitBlocksWithText, SplitBlocksOptions, SplitBlocksResult } from './splitter';
 
 export function markdownToBlocks(markdown: string, options?: MarkdownToBlocksOptions) {
     validateOptions(options);

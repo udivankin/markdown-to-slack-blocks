@@ -141,22 +141,30 @@ All IDs must be alphanumeric.
 
 ### Handling Large Messages
 
-Slack limits messages to **~45 blocks** and **~12KB** of JSON. Use `splitBlocks` to split large outputs into several messages:
+Slack limits messages to **~45 blocks** and **~12KB** of JSON. Use `splitBlocks` to split large outputs into several messages, or `splitBlocksWithText` if you also need a plain-text fallback for `postMessage`:
 
 ```typescript
-import { markdownToBlocks, splitBlocks } from 'markdown-to-slack-blocks';
+import { markdownToBlocks, splitBlocks, splitBlocksWithText } from 'markdown-to-slack-blocks';
 
 const blocks = markdownToBlocks(veryLongMarkdown);
-const batches = splitBlocks(blocks);
 
+// Blocks-only batches
+const batches = splitBlocks(blocks);
 for (const batch of batches) {
     await slack.postMessage({ channel, blocks: batch });
+}
+
+// Batches with text fallback
+const batchesWithText = splitBlocksWithText(blocks);
+for (const batch of batchesWithText) {
+    await slack.postMessage({ channel, text: batch.text, blocks: batch.blocks });
 }
 ```
 
 **Options:**
 ```typescript
 splitBlocks(blocks, { maxBlocks: 40, maxCharacters: 12000 });
+splitBlocksWithText(blocks, { maxBlocks: 40, maxCharacters: 12000 });
 ```
 
-The function splits at natural boundaries: between blocks first, then within `rich_text` elements, and finally within large code blocks by line.
+Splitting happens at natural boundaries: between blocks first, then within `rich_text` elements, and finally within large code blocks by line. `splitBlocksWithText` additionally generates a concise plaintext summary per batch (headers, sections, rich text, tables, etc.) suitable for Slack's `text` field.

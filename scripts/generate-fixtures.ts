@@ -1,4 +1,4 @@
-import { markdownToBlocks, splitBlocks } from '../src/index';
+import { markdownToBlocks, splitBlocksWithText } from '../src/index';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -38,14 +38,20 @@ fs.writeFileSync(
 );
 console.log('✓ Generated output_sections.json');
 
-// Generate long content output (splitBlocks)
+// Generate long content output (blocks and split batches)
 const longMdPath = path.join(fixturesDir, 'input_long.md');
 const longMarkdown = fs.readFileSync(longMdPath, 'utf-8');
 const longBlocks = markdownToBlocks(longMarkdown);
-const longBatches = splitBlocks(longBlocks);
+const longBatches = splitBlocksWithText(longBlocks);
 
 fs.writeFileSync(
     path.join(fixturesDir, 'output_long.json'),
-    JSON.stringify(longBatches, null, 2)
+    JSON.stringify(longBlocks, null, 2)
 );
 console.log('✓ Generated output_long.json');
+
+fs.writeFileSync(
+    path.join(fixturesDir, 'output_long_split.json'),
+    JSON.stringify(longBatches, null, 2)
+);
+console.log('✓ Generated output_long_split.json');

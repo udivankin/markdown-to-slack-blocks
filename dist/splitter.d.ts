@@ -5,6 +5,10 @@ export interface SplitBlocksOptions {
     /** Maximum JSON character count per message. Default: 12000 */
     maxCharacters?: number;
 }
+export interface SplitBlocksResult {
+    text: string;
+    blocks: Block[];
+}
 /**
  * Splits an array of blocks into multiple arrays that fit within Slack's limits.
  * Attempts to split at natural boundaries (between top-level blocks, rich_text elements, etc.)
@@ -14,4 +18,8 @@ export interface SplitBlocksOptions {
  * @returns Array of block arrays, each fitting within the limits
  */
 export declare function splitBlocks(blocks: Block[], options?: SplitBlocksOptions): Block[][];
+/**
+ * Splits blocks and also returns a plain-text fallback for each batch, suitable for postMessage `text`.
+ */
+export declare function splitBlocksWithText(blocks: Block[], options?: SplitBlocksOptions): SplitBlocksResult[];
 //# sourceMappingURL=splitter.d.ts.map

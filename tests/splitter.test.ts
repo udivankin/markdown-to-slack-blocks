@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitBlocks } from '../src/splitter';
+import { splitBlocks, splitBlocksWithText } from '../src/splitter';
 import { Block, RichTextBlock, SectionBlock, HeaderBlock } from '../src/types';
 
 describe('splitBlocks', () => {
@@ -306,6 +306,39 @@ describe('splitBlocks', () => {
 
             expect(block2.type).toBe('section');
             expect(block2.text?.text).toHaveLength(500);
+        });
+    });
+
+    describe('splitBlocksWithText', () => {
+        it('returns plain text alongside batches', () => {
+            const blocks: Block[] = [
+                { type: 'header', text: { type: 'plain_text', text: 'Title' } },
+                { type: 'section', text: { type: 'mrkdwn', text: 'Hello *world*' } },
+                { type: 'divider' },
+                createRichTextBlock('Final line'),
+            ];
+
+            const [first] = splitBlocksWithText(blocks);
+
+            expect(first.blocks).toEqual(blocks);
+            expect(first.text).toContain('Title');
+            expect(first.text).toContain('Hello *world*');
+            expect(first.text).toContain('Final line');
+            expect(first.text).toContain('---');
+        });
+
+        it('keeps text aligned to batches after splitting', () => {
+            const blocks: Block[] = Array(45).fill(null).map((_, i) => createRichTextBlock(`Block ${i}`));
+            const result = splitBlocksWithText(blocks, { maxBlocks: 20 });
+
+            expect(result).toHaveLength(3);
+            expect(result[0].blocks).toHaveLength(20);
+            expect(result[1].blocks).toHaveLength(20);
+            expect(result[2].blocks).toHaveLength(5);
+
+            const concatenated = result.map(r => r.text).join(' ');
+            expect(concatenated).toContain('Block 0');
+            expect(concatenated).toContain('Block 44');
         });
     });
 });

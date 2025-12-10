@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { markdownToBlocks, splitBlocks } from '../src/index';
+import { markdownToBlocks, splitBlocks, splitBlocksWithText } from '../src/index';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -87,22 +87,26 @@ describe('Integration Test', () => {
         expect(totalBlocks).toBe(blocks.length);
     });
 
-    it('converts input_long.md to expected batch blocks JSON in output_long.json', () => {
+    it('converts input_long.md to expected blocks and split batches', () => {
         const mdPath = path.join(__dirname, 'fixtures', 'input_long.md');
-        const jsonPath = path.join(__dirname, 'fixtures', 'output_long.json');
+        const blocksJsonPath = path.join(__dirname, 'fixtures', 'output_long.json');
+        const splitJsonPath = path.join(__dirname, 'fixtures', 'output_long_split.json');
 
         const markdown = fs.readFileSync(mdPath, 'utf-8');
-        const expectedBatches = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const expectedBlocks = JSON.parse(fs.readFileSync(blocksJsonPath, 'utf-8'));
+        const expectedBatches = JSON.parse(fs.readFileSync(splitJsonPath, 'utf-8'));
 
         const blocks = markdownToBlocks(markdown);
-        const result = splitBlocks(blocks);
+        expect(blocks).toEqual(expectedBlocks);
+
+        const result = splitBlocksWithText(blocks);
 
         // Check overall structure
         expect(result.length).toBe(expectedBatches.length);
         expect(result).toEqual(expectedBatches);
 
         // Verify limits are respected for implicit check
-        for (const batch of result) {
+        for (const batch of result.map(r => r.blocks)) {
             expect(batch.length).toBeLessThanOrEqual(40);
             expect(JSON.stringify(batch).length).toBeLessThanOrEqual(12000);
 
@@ -113,5 +117,8 @@ describe('Integration Test', () => {
                 }
             }
         }
+
+        // Sanity: text fallback should not be empty
+        expect(result.every(r => typeof r.text === 'string' && r.text.length > 0)).toBe(true);
     });
 });

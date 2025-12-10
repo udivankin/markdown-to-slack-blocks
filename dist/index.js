@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.splitBlocks = void 0;
+exports.splitBlocksWithText = exports.splitBlocks = void 0;
 exports.markdownToBlocks = markdownToBlocks;
 const parser_1 = require("./parser");
 const validator_1 = require("./validator");
@@ -22,6 +22,7 @@ const validator_1 = require("./validator");
 __exportStar(require("./types"), exports);
 var splitter_1 = require("./splitter");
 Object.defineProperty(exports, "splitBlocks", { enumerable: true, get: function () { return splitter_1.splitBlocks; } });
+Object.defineProperty(exports, "splitBlocksWithText", { enumerable: true, get: function () { return splitter_1.splitBlocksWithText; } });
 function markdownToBlocks(markdown, options) {
     (0, validator_1.validateOptions)(options);
     return (0, parser_1.parseMarkdown)(markdown, options);
