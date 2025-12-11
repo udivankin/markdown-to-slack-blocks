@@ -168,3 +168,16 @@ splitBlocksWithText(blocks, { maxBlocks: 40, maxCharacters: 12000 });
 ```
 
 Splitting happens at natural boundaries: between blocks first, then within `rich_text` elements, and finally within large code blocks by line. `splitBlocksWithText` additionally generates a concise plaintext summary per batch (headers, sections, rich text, tables, etc.) suitable for Slack's `text` field.
+
+### Plain text rendering
+
+If you already have a block array and need a lightweight plaintext fallback (for example to populate the `text` field in `chat.postMessage`), use `blocksToPlainText`:
+
+```typescript
+import { blocksToPlainText } from 'markdown-to-slack-blocks';
+
+const text = blocksToPlainText(blocks);
+// -> "Hello world" or similar, depending on your blocks
+```
+
+The function walks the rendered blocks and returns a joined string that keeps list markers, quotes, tables (as `cell | cell` rows), mentions, dates (using the provided fallback or ISO string), and basic formatting markers where possible. The output is best-effort and is intended for concise fallbacks rather than full fidelity rendering.

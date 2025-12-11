@@ -1,12 +1,21 @@
-import { parseMarkdown } from './parser';
-import { MarkdownToBlocksOptions } from './types';
-import { validateOptions } from './validator';
+import { parseMarkdown } from "./parser";
+import type { MarkdownToBlocksOptions } from "./types";
+import { validateOptions } from "./validator";
 
 // Re-export types for consumers
-export * from './types';
-export { splitBlocks, splitBlocksWithText, SplitBlocksOptions, SplitBlocksResult } from './splitter';
+export * from "./types";
+export {
+	blocksToPlainText,
+	splitBlocks,
+	splitBlocksWithText,
+	SplitBlocksOptions,
+	SplitBlocksResult,
+} from "./splitter";
 
-export function markdownToBlocks(markdown: string, options?: MarkdownToBlocksOptions) {
-    validateOptions(options);
-    return parseMarkdown(markdown, options);
+export function markdownToBlocks(
+	markdown: string,
+	options?: MarkdownToBlocksOptions,
+) {
+	validateOptions(options);
+	return parseMarkdown(markdown, options);
 }
