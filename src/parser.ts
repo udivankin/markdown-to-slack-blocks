@@ -12,15 +12,66 @@ import type {
 	RichTextStyle,
 	RichTextText,
 } from "./types";
+import type {
+	Content,
+	Html,
+	Image,
+	InlineCode,
+	Link,
+	List,
+	ListItem,
+	Paragraph,
+	PhrasingContent,
+	Root,
+	Text,
+	Delete,
+	Emphasis,
+	Strong,
+} from "mdast";
+
+type InlineNode =
+	| Text
+	| Html
+	| Emphasis
+	| Strong
+	| Delete
+	| InlineCode
+	| Link
+	| Image;
+
+function isInlineNode(node: PhrasingContent): node is InlineNode {
+	return (
+		node.type === "text" ||
+		node.type === "html" ||
+		node.type === "emphasis" ||
+		node.type === "strong" ||
+		node.type === "delete" ||
+		node.type === "inlineCode" ||
+		node.type === "link" ||
+		node.type === "image"
+	);
+}
+
+function isParagraphNode(
+	node: Content | ListItem["children"][number],
+): node is Paragraph {
+	return node.type === "paragraph";
+}
+
+function isListNode(
+	node: Content | ListItem["children"][number],
+): node is List {
+	return node.type === "list";
+}
 
 export function parseMarkdown(
 	markdown: string,
 	options: MarkdownToBlocksOptions = {},
 ): Block[] {
-	const ast = fromMarkdown(markdown, {
+	const ast: Root = fromMarkdown(markdown, {
 		extensions: [gfm()],
 		mdastExtensions: [gfmFromMarkdown()],
-	});
+	}) as Root;
 	const blocks: Block[] = [];
 	let currentRichTextElements: RichTextElement[] = [];
 
@@ -91,15 +142,15 @@ export function parseMarkdown(
 				} else {
 					currentRichTextElements.push({
 						type: "rich_text_section",
-						elements: node.children.flatMap((child: any) =>
-							mapInlineNode(child, options),
+						elements: node.children.flatMap((child) =>
+							isInlineNode(child) ? mapInlineNode(child, options) : [],
 						),
 					});
 				}
 			}
 		} else if (node.type === "list") {
 			// Helper function to recursively process lists with proper indentation
-			const processList = (listNode: any, indent: number): RichTextList[] => {
+			const processList = (listNode: List, indent: number): RichTextList[] => {
 				const results: RichTextList[] = [];
 				const currentListItems: {
 					type: "rich_text_section";
@@ -108,11 +159,13 @@ export function parseMarkdown(
 
 				for (const listItem of listNode.children) {
 					// Process the paragraph content of this list item
-					const paragraphElements: RichTextSectionElement[] = listItem.children
-						.filter((child: any) => child.type === "paragraph")
-						.flatMap((child: any) =>
-							child.children.flatMap((c: any) => mapInlineNode(c, options)),
-						);
+					const paragraphElements: RichTextSectionElement[] =
+						listItem.children.flatMap((child) => {
+							if (!isParagraphNode(child)) return [];
+							return child.children.flatMap((c) =>
+								isInlineNode(c) ? mapInlineNode(c, options) : [],
+							);
+						});
 
 					if (paragraphElements.length > 0) {
 						currentListItems.push({
@@ -122,9 +175,7 @@ export function parseMarkdown(
 					}
 
 					// Process any nested lists (recursively)
-					const nestedLists = listItem.children.filter(
-						(child: any) => child.type === "list",
-					);
+					const nestedLists = listItem.children.filter(isListNode);
 					if (nestedLists.length > 0) {
 						// First, push the current list with items collected so far
 						if (currentListItems.length > 0) {
@@ -173,13 +224,11 @@ export function parseMarkdown(
 		} else if (node.type === "blockquote") {
 			currentRichTextElements.push({
 				type: "rich_text_quote",
-				elements: node.children.flatMap((child: any) => {
-					if (child.type === "paragraph") {
-						return child.children.flatMap((c: any) =>
-							mapInlineNode(c, options),
-						);
-					}
-					return [];
+				elements: node.children.flatMap((child) => {
+					if (!isParagraphNode(child)) return [];
+					return child.children.flatMap((c) =>
+						isInlineNode(c) ? mapInlineNode(c, options) : [],
+					);
 				}),
 			});
 			// Start a new rich_text block after blockquotes for visual separation
@@ -196,15 +245,15 @@ export function parseMarkdown(
 			});
 		} else if (node.type === "table") {
 			flushRichText();
-			const rows: RichTextBlock[][] = node.children.map((row: any) => {
-				return row.children.map((cell: any) => {
+			const rows: RichTextBlock[][] = node.children.map((row) => {
+				return row.children.map((cell) => {
 					return {
 						type: "rich_text",
 						elements: [
 							{
 								type: "rich_text_section",
-								elements: cell.children.flatMap((c: any) =>
-									mapInlineNode(c, options),
+								elements: cell.children.flatMap((c) =>
+									isInlineNode(c) ? mapInlineNode(c, options) : [],
 								),
 							},
 						],
@@ -229,7 +278,7 @@ export function parseMarkdown(
 }
 
 function mapInlineNode(
-	node: any,
+	node: InlineNode,
 	options: MarkdownToBlocksOptions,
 ): RichTextSectionElement[] {
 	if (node.type === "text" || node.type === "html") {
@@ -265,11 +314,13 @@ function mapInlineNode(
 }
 
 function flattenStyles(
-	children: any[],
+	children: PhrasingContent[],
 	style: RichTextStyle,
 	options: MarkdownToBlocksOptions,
 ): RichTextSectionElement[] {
-	const elements = children.flatMap((c) => mapInlineNode(c, options));
+	const elements = children.flatMap((c) =>
+		isInlineNode(c) ? mapInlineNode(c, options) : [],
+	);
 	return elements.map((el) => {
 		const mergedStyle = { ...el.style, ...style };
 		// If the resulting style object is empty, do not attach it
@@ -343,11 +394,13 @@ function processTextNode(
 		}
 
 		// Apply style if it exists
-		const withStyle = (obj: any) => {
+		const withStyle = <T extends object>(
+			obj: T,
+		): T & { style?: RichTextStyle } => {
 			if (Object.keys(style).length > 0) {
 				return { ...obj, style };
 			}
-			return obj;
+			return obj as T & { style?: RichTextStyle };
 		};
 
 		if (match[1]) {
@@ -408,17 +461,14 @@ function processTextNode(
 				mapped = true;
 			}
 			// 2. Check Users
-			else if (options.mentions?.users && options.mentions.users[name]) {
+			else if (options.mentions?.users?.[name]) {
 				elements.push(
 					withStyle({ type: "user", user_id: options.mentions.users[name] }),
 				);
 				mapped = true;
 			}
 			// 3. Check User Groups
-			else if (
-				options.mentions?.userGroups &&
-				options.mentions.userGroups[name]
-			) {
+			else if (options.mentions?.userGroups?.[name]) {
 				elements.push(
 					withStyle({
 						type: "usergroup",
@@ -428,7 +478,7 @@ function processTextNode(
 				mapped = true;
 			}
 			// 4. Check Teams
-			else if (options.mentions?.teams && options.mentions.teams[name]) {
+			else if (options.mentions?.teams?.[name]) {
 				elements.push(
 					withStyle({ type: "team", team_id: options.mentions.teams[name] }),
 				);
@@ -443,7 +493,7 @@ function processTextNode(
 			const name = match[18];
 			let mapped = false;
 
-			if (options.mentions?.channels && options.mentions.channels[name]) {
+			if (options.mentions?.channels?.[name]) {
 				elements.push(
 					withStyle({
 						type: "channel",
@@ -474,14 +524,18 @@ function processTextNode(
  * Used for section blocks where we need mrkdwn text instead of rich_text elements.
  */
 function inlineNodesToMrkdwn(
-	nodes: any[],
+	nodes: PhrasingContent[],
 	options: MarkdownToBlocksOptions,
 ): string {
-	return nodes.map((node: any) => inlineNodeToMrkdwn(node, options)).join("");
+	return nodes
+		.map((node) =>
+			isInlineNode(node) ? inlineNodeToMrkdwn(node, options) : "",
+		)
+		.join("");
 }
 
 function inlineNodeToMrkdwn(
-	node: any,
+	node: InlineNode,
 	options: MarkdownToBlocksOptions,
 ): string {
 	if (node.type === "text") {
@@ -578,18 +632,15 @@ function convertTextToMrkdwn(
 				result += `<!${name}>`;
 			}
 			// 2. Check Users
-			else if (options.mentions?.users && options.mentions.users[name]) {
+			else if (options.mentions?.users?.[name]) {
 				result += `<@${options.mentions.users[name]}>`;
 			}
 			// 3. Check User Groups
-			else if (
-				options.mentions?.userGroups &&
-				options.mentions.userGroups[name]
-			) {
+			else if (options.mentions?.userGroups?.[name]) {
 				result += `<!subteam^${options.mentions.userGroups[name]}>`;
 			}
 			// 4. Check Teams
-			else if (options.mentions?.teams && options.mentions.teams[name]) {
+			else if (options.mentions?.teams?.[name]) {
 				result += `<!subteam^${options.mentions.teams[name]}>`;
 			}
 			// 5. Not found - leave as-is
@@ -600,7 +651,7 @@ function convertTextToMrkdwn(
 			// Mapped Channel: #name
 			const name = match[18];
 
-			if (options.mentions?.channels && options.mentions.channels[name]) {
+			if (options.mentions?.channels?.[name]) {
 				result += `<#${options.mentions.channels[name]}>`;
 			} else {
 				// Not found - leave as-is

@@ -11,9 +11,14 @@ export interface SectionBlock {
 	type: "section";
 	text?: TextObject;
 	fields?: TextObject[];
-	accessory?: any; // Simplify for now
+	accessory?: SectionAccessory;
 	block_id?: string;
 }
+
+// Narrow accessory away from any; allow known image elements plus typed fallbacks for other Block Kit accessories.
+export type SectionAccessory =
+	| ImageElement
+	| { type: string; [key: string]: unknown };
 
 export interface HeaderBlock {
 	type: "header";

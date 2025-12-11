@@ -308,11 +308,13 @@ function splitSectionBlock(
 	block: SectionBlock,
 	maxChars: number,
 ): SectionBlock[] {
-	if (!block.text || block.text.text.length <= maxChars) {
+	const text = block.text;
+
+	if (!text || text.text.length <= maxChars) {
 		return [block];
 	}
 
-	const chunks = chunkString(block.text.text, maxChars);
+	const chunks = chunkString(text.text, maxChars);
 	const result: SectionBlock[] = [];
 
 	// The first block keeps the accessory and fields, subsequent ones are just text
@@ -320,7 +322,7 @@ function splitSectionBlock(
 		const newBlock: SectionBlock = {
 			type: "section",
 			text: {
-				...block.text!,
+				...text,
 				text: chunk,
 			},
 			...(block.block_id && index === 0 ? { block_id: block.block_id } : {}),

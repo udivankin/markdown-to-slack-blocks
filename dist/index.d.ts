@@ -1,5 +1,5 @@
-import { MarkdownToBlocksOptions } from './types';
-export * from './types';
-export { splitBlocks, splitBlocksWithText, SplitBlocksOptions, SplitBlocksResult } from './splitter';
+import type { MarkdownToBlocksOptions } from "./types";
+export * from "./types";
+export { blocksToPlainText, splitBlocks, splitBlocksWithText, SplitBlocksOptions, SplitBlocksResult, } from "./splitter";
 export declare function markdownToBlocks(markdown: string, options?: MarkdownToBlocksOptions): import("./types").Block[];
 //# sourceMappingURL=index.d.ts.map

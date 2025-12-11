@@ -1,4 +1,4 @@
-import { Block } from './types';
+import type { Block } from "./types";
 export interface SplitBlocksOptions {
     /** Maximum number of blocks per message. Default: 40 */
     maxBlocks?: number;
@@ -22,4 +22,8 @@ export declare function splitBlocks(blocks: Block[], options?: SplitBlocksOption
  * Splits blocks and also returns a plain-text fallback for each batch, suitable for postMessage `text`.
  */
 export declare function splitBlocksWithText(blocks: Block[], options?: SplitBlocksOptions): SplitBlocksResult[];
+/**
+ * Generates a lightweight plain-text fallback from a block batch.
+ */
+export declare function blocksToPlainText(blocks: Block[]): string;
 //# sourceMappingURL=splitter.d.ts.map

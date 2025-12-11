@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.splitBlocks = splitBlocks;
 exports.splitBlocksWithText = splitBlocksWithText;
+exports.blocksToPlainText = blocksToPlainText;
 const DEFAULT_MAX_BLOCKS = 40;
 const DEFAULT_MAX_CHARACTERS = 12000;
 const DEFAULT_MAX_TEXT_SECTION_CHARACTERS = 3000;
@@ -18,10 +19,10 @@ function splitBlocks(blocks, options) {
     const maxChars = options?.maxCharacters ?? DEFAULT_MAX_CHARACTERS;
     const normalizedBlocks = [];
     for (const block of blocks) {
-        if (block.type === 'section') {
+        if (block.type === "section") {
             normalizedBlocks.push(...splitSectionBlock(block, DEFAULT_MAX_TEXT_SECTION_CHARACTERS));
         }
-        else if (block.type === 'header') {
+        else if (block.type === "header") {
             normalizedBlocks.push(...splitHeaderBlock(block, DEFAULT_MAX_TEXT_SECTION_CHARACTERS));
         }
         else {
@@ -32,7 +33,8 @@ function splitBlocks(blocks, options) {
         return [[]];
     }
     // Check if everything fits in one message
-    if (normalizedBlocks.length <= maxBlocks && JSON.stringify(normalizedBlocks).length <= maxChars) {
+    if (normalizedBlocks.length <= maxBlocks &&
+        JSON.stringify(normalizedBlocks).length <= maxChars) {
         return [normalizedBlocks];
     }
     const result = [];
@@ -63,8 +65,8 @@ function splitBlocks(blocks, options) {
             continue;
         }
         // Single block is too large - try to split it
-        if (block.type === 'rich_text') {
-            const splitRichText = splitLargeRichTextBlock(block, maxBlocks, maxChars);
+        if (block.type === "rich_text") {
+            const splitRichText = splitLargeRichTextBlock(block, maxChars);
             for (const subBlock of splitRichText) {
                 if (fitsInBatch(currentBatch, subBlock)) {
                     currentBatch.push(subBlock);
@@ -89,7 +91,7 @@ function splitBlocks(blocks, options) {
  */
 function splitBlocksWithText(blocks, options) {
     const batches = splitBlocks(blocks, options);
-    return batches.map(batch => ({
+    return batches.map((batch) => ({
         text: blocksToPlainText(batch),
         blocks: batch,
     }));
@@ -97,7 +99,7 @@ function splitBlocksWithText(blocks, options) {
 /**
  * Splits a large RichTextBlock into smaller RichTextBlocks by splitting its elements
  */
-function splitLargeRichTextBlock(block, maxBlocks, maxChars) {
+function splitLargeRichTextBlock(block, maxChars) {
     const elements = block.elements;
     if (elements.length === 0) {
         return [block];
@@ -126,7 +128,7 @@ function splitRichTextByElements(elements, maxChars) {
     const result = [];
     let currentElements = [];
     const createBlock = (elems) => ({
-        type: 'rich_text',
+        type: "rich_text",
         elements: elems,
     });
     for (const element of elements) {
@@ -156,12 +158,12 @@ function splitRichTextByElements(elements, maxChars) {
 function splitRichTextBlockElements(block, maxChars) {
     const result = [];
     for (const element of block.elements) {
-        if (element.type === 'rich_text_preformatted') {
+        if (element.type === "rich_text_preformatted") {
             // Split large code blocks by lines
             const splitPreformatted = splitPreformattedElement(element, maxChars);
             for (const splitElem of splitPreformatted) {
                 result.push({
-                    type: 'rich_text',
+                    type: "rich_text",
                     elements: [splitElem],
                 });
             }
@@ -169,7 +171,7 @@ function splitRichTextBlockElements(block, maxChars) {
         else {
             // For other element types, just wrap them as-is
             result.push({
-                type: 'rich_text',
+                type: "rich_text",
                 elements: [element],
             });
         }
@@ -181,12 +183,14 @@ function splitRichTextBlockElements(block, maxChars) {
  */
 function splitPreformattedElement(element, maxChars) {
     // Get the text content
-    const textElements = element.elements.filter(e => e.type === 'text');
+    const textElements = element.elements.filter((e) => e.type === "text");
     if (textElements.length === 0) {
         return [element];
     }
-    const fullText = textElements.map(e => e.type === 'text' ? e.text : '').join('');
-    const lines = fullText.split('\n');
+    const fullText = textElements
+        .map((e) => (e.type === "text" ? e.text : ""))
+        .join("");
+    const lines = fullText.split("\n");
     if (lines.length <= 1) {
         // Can't split further
         return [element];
@@ -194,22 +198,22 @@ function splitPreformattedElement(element, maxChars) {
     const result = [];
     let currentLines = [];
     const createPreformatted = (text) => ({
-        type: 'rich_text_preformatted',
-        elements: [{ type: 'text', text }],
+        type: "rich_text_preformatted",
+        elements: [{ type: "text", text }],
         ...(element.border !== undefined ? { border: element.border } : {}),
     });
     const estimateSize = (text) => {
         return JSON.stringify(createPreformatted(text)).length;
     };
     for (const line of lines) {
-        const testText = [...currentLines, line].join('\n');
+        const testText = [...currentLines, line].join("\n");
         if (estimateSize(testText) <= maxChars) {
             currentLines.push(line);
         }
         else {
             // Flush current lines
             if (currentLines.length > 0) {
-                result.push(createPreformatted(currentLines.join('\n')));
+                result.push(createPreformatted(currentLines.join("\n")));
                 currentLines = [];
             }
             // Start new batch with this line
@@ -218,7 +222,7 @@ function splitPreformattedElement(element, maxChars) {
     }
     // Flush remaining
     if (currentLines.length > 0) {
-        result.push(createPreformatted(currentLines.join('\n')));
+        result.push(createPreformatted(currentLines.join("\n")));
     }
     return result.length > 0 ? result : [element];
 }
@@ -226,20 +230,21 @@ function splitPreformattedElement(element, maxChars) {
  * Splits a large SectionBlock into multiple SectionBlocks if text exceeds limit
  */
 function splitSectionBlock(block, maxChars) {
-    if (!block.text || block.text.text.length <= maxChars) {
+    const text = block.text;
+    if (!text || text.text.length <= maxChars) {
         return [block];
     }
-    const chunks = chunkString(block.text.text, maxChars);
+    const chunks = chunkString(text.text, maxChars);
     const result = [];
     // The first block keeps the accessory and fields, subsequent ones are just text
     chunks.forEach((chunk, index) => {
         const newBlock = {
-            type: 'section',
+            type: "section",
             text: {
-                ...block.text,
-                text: chunk
+                ...text,
+                text: chunk,
             },
-            ...(block.block_id && index === 0 ? { block_id: block.block_id } : {})
+            ...(block.block_id && index === 0 ? { block_id: block.block_id } : {}),
         };
         if (index === 0) {
             if (block.fields)
@@ -264,21 +269,21 @@ function splitHeaderBlock(block, maxChars) {
     const result = [];
     // First chunk remains a header
     result.push({
-        type: 'header',
+        type: "header",
         text: {
             ...block.text,
-            text: chunks[0]
+            text: chunks[0],
         },
-        ...(block.block_id ? { block_id: block.block_id } : {})
+        ...(block.block_id ? { block_id: block.block_id } : {}),
     });
     // Subsequent chunks become Section blocks
     for (let i = 1; i < chunks.length; i++) {
         result.push({
-            type: 'section',
+            type: "section",
             text: {
-                type: 'mrkdwn',
-                text: chunks[i]
-            }
+                type: "mrkdwn",
+                text: chunks[i],
+            },
         });
     }
     return result;
@@ -298,12 +303,12 @@ function chunkString(str, limit) {
         let sliceIndex = limit;
         // Look for last newline within the safety zone (e.g. last 100 chars or just within the limit)
         // We look backwards from limit.
-        const newlineIndex = current.lastIndexOf('\n', limit);
+        const newlineIndex = current.lastIndexOf("\n", limit);
         if (newlineIndex !== -1 && newlineIndex > 0) {
             sliceIndex = newlineIndex; // Split AT newline (newline becomes part of first chunk? or consumed?)
-            // Usually split at newline means: "Line 1\nLine 2" -> "Line 1", "Line 2". 
+            // Usually split at newline means: "Line 1\nLine 2" -> "Line 1", "Line 2".
             // slice(0, index) excludes index.
-            // We want to keep the newline structure? 
+            // We want to keep the newline structure?
             // If we split "A\nB", chunk 1 "A", chunk 2 "B".
             // So sliceIndex = newlineIndex.
             // And next start = newlineIndex + 1.
@@ -312,8 +317,9 @@ function chunkString(str, limit) {
             continue;
         }
         // Look for last space
-        const spaceIndex = current.lastIndexOf(' ', limit);
-        if (spaceIndex !== -1 && spaceIndex > limit * 0.8) { // Only split at space if it's somewhat close to the end, to avoid too short lines?
+        const spaceIndex = current.lastIndexOf(" ", limit);
+        if (spaceIndex !== -1 && spaceIndex > limit * 0.8) {
+            // Only split at space if it's somewhat close to the end, to avoid too short lines?
             // Actually, any space is better than mid-word.
             sliceIndex = spaceIndex;
             chunks.push(current.slice(0, sliceIndex));
@@ -331,78 +337,90 @@ function chunkString(str, limit) {
  */
 function blocksToPlainText(blocks) {
     const parts = [];
-    const renderTextObject = (text) => text?.text ?? '';
+    const renderTextObject = (text) => text?.text ?? "";
     const renderRichTextSectionElement = (element) => {
         switch (element.type) {
-            case 'text':
+            case "text":
                 return element.text;
-            case 'link':
+            case "link":
                 return element.text ?? element.url;
-            case 'emoji':
+            case "emoji":
                 return `:${element.name}:`;
-            case 'date':
-                return element.fallback ?? new Date(element.timestamp * 1000).toISOString();
-            case 'user':
+            case "date":
+                return (element.fallback ?? new Date(element.timestamp * 1000).toISOString());
+            case "user":
                 return `<@${element.user_id}>`;
-            case 'usergroup':
+            case "usergroup":
                 return `<!subteam^${element.usergroup_id}>`;
-            case 'team':
+            case "team":
                 return `<team:${element.team_id}>`;
-            case 'channel':
+            case "channel":
                 return `<#${element.channel_id}>`;
-            case 'broadcast':
-                return element.range === 'here' ? `<!here>` : element.range === 'channel' ? `<!channel>` : `<!everyone>`;
-            case 'color':
+            case "broadcast":
+                return element.range === "here"
+                    ? `<!here>`
+                    : element.range === "channel"
+                        ? `<!channel>`
+                        : `<!everyone>`;
+            case "color":
                 return element.value;
             default:
-                return '';
+                return "";
         }
     };
     const renderRichTextElement = (element) => {
         switch (element.type) {
-            case 'rich_text_section':
-                return element.elements.map(renderRichTextSectionElement).filter(Boolean).join('');
-            case 'rich_text_list':
+            case "rich_text_section":
+                return element.elements
+                    .map(renderRichTextSectionElement)
+                    .filter(Boolean)
+                    .join("");
+            case "rich_text_list":
                 return element.elements
                     .map((item, idx) => {
-                    const marker = element.style === 'ordered' ? `${(element.offset ?? 1) + idx}. ` : '- ';
-                    return marker + item.elements.map(renderRichTextSectionElement).join('');
+                    const marker = element.style === "ordered"
+                        ? `${(element.offset ?? 1) + idx}. `
+                        : "- ";
+                    return (marker + item.elements.map(renderRichTextSectionElement).join(""));
                 })
-                    .join('\n');
-            case 'rich_text_preformatted':
-                return element.elements.map(renderRichTextSectionElement).join('');
-            case 'rich_text_quote':
-                return element.elements.map(renderRichTextSectionElement).map(line => `> ${line}`).join('\n');
+                    .join("\n");
+            case "rich_text_preformatted":
+                return element.elements.map(renderRichTextSectionElement).join("");
+            case "rich_text_quote":
+                return element.elements
+                    .map(renderRichTextSectionElement)
+                    .map((line) => `> ${line}`)
+                    .join("\n");
             default:
-                return '';
+                return "";
         }
     };
     const renderRichTextBlock = (block) => {
-        return block.elements.map(renderRichTextElement).filter(Boolean).join('\n');
+        return block.elements.map(renderRichTextElement).filter(Boolean).join("\n");
     };
     const renderBlock = (block) => {
         switch (block.type) {
-            case 'section':
+            case "section":
                 return renderTextObject(block.text);
-            case 'header':
+            case "header":
                 return renderTextObject(block.text);
-            case 'context':
+            case "context":
                 return block.elements
-                    .map(el => el.text ?? '')
+                    .map((el) => el.text ?? "")
                     .filter(Boolean)
-                    .join(' ');
-            case 'rich_text':
+                    .join(" ");
+            case "rich_text":
                 return renderRichTextBlock(block);
-            case 'divider':
-                return '---';
-            case 'image':
-                return block.title?.text ?? block.alt_text ?? 'Image';
-            case 'table':
+            case "divider":
+                return "---";
+            case "image":
+                return block.title?.text ?? block.alt_text ?? "Image";
+            case "table":
                 return block.rows
-                    .map(row => row.map(renderRichTextBlock).join(' | '))
-                    .join('\n');
+                    .map((row) => row.map(renderRichTextBlock).join(" | "))
+                    .join("\n");
             default:
-                return '';
+                return "";
         }
     };
     for (const block of blocks) {
@@ -410,5 +428,5 @@ function blocksToPlainText(blocks) {
         if (rendered)
             parts.push(rendered);
     }
-    return parts.join('\n\n');
+    return parts.join("\n\n");
 }

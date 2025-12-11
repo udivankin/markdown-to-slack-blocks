@@ -1,81 +1,85 @@
 export type Block = SectionBlock | HeaderBlock | ImageBlock | ContextBlock | DividerBlock | RichTextBlock | TableBlock;
 export interface SectionBlock {
-    type: 'section';
+    type: "section";
     text?: TextObject;
     fields?: TextObject[];
-    accessory?: any;
+    accessory?: SectionAccessory;
     block_id?: string;
 }
+export type SectionAccessory = ImageElement | {
+    type: string;
+    [key: string]: unknown;
+};
 export interface HeaderBlock {
-    type: 'header';
+    type: "header";
     text: PlainTextObject;
     block_id?: string;
 }
 export interface ImageBlock {
-    type: 'image';
+    type: "image";
     image_url: string;
     alt_text: string;
     title?: PlainTextObject;
     block_id?: string;
 }
 export interface ContextBlock {
-    type: 'context';
+    type: "context";
     elements: (ImageElement | TextObject)[];
     block_id?: string;
 }
 export interface DividerBlock {
-    type: 'divider';
+    type: "divider";
     block_id?: string;
 }
 export interface RichTextBlock {
-    type: 'rich_text';
+    type: "rich_text";
     elements: RichTextElement[];
     block_id?: string;
 }
 export type RichTextElement = RichTextSection | RichTextList | RichTextPreformatted | RichTextQuote;
 export interface RichTextSection {
-    type: 'rich_text_section';
+    type: "rich_text_section";
     elements: RichTextSectionElement[];
 }
 export interface RichTextList {
-    type: 'rich_text_list';
-    style: 'bullet' | 'ordered';
+    type: "rich_text_list";
+    style: "bullet" | "ordered";
     indent?: number;
     offset?: number;
     border?: number;
     elements: RichTextSection[];
 }
 export interface RichTextPreformatted {
-    type: 'rich_text_preformatted';
+    type: "rich_text_preformatted";
     elements: RichTextSectionElement[];
     border?: number;
 }
 export interface RichTextQuote {
-    type: 'rich_text_quote';
+    type: "rich_text_quote";
     elements: RichTextSectionElement[];
     border?: number;
 }
 export type RichTextSectionElement = RichTextText | RichTextLink | RichTextEmoji | RichTextDate | RichTextUser | RichTextUserGroup | RichTextTeam | RichTextChannel | RichTextBroadcast | RichTextColor;
 export interface RichTextText {
-    type: 'text';
+    type: "text";
     text: string;
     style?: RichTextStyle;
 }
 export interface RichTextLink {
-    type: 'link';
+    type: "link";
     url: string;
     text?: string;
     unsafe?: boolean;
     style?: RichTextStyle;
 }
 export interface RichTextEmoji {
-    type: 'emoji';
+    type: "emoji";
     name: string;
     unicode?: string;
     style?: RichTextStyle;
 }
 export interface RichTextDate {
-    type: 'date';
+    type: "date";
     timestamp: number;
     format: string;
     url?: string;
@@ -83,32 +87,32 @@ export interface RichTextDate {
     style?: RichTextStyle;
 }
 export interface RichTextUser {
-    type: 'user';
+    type: "user";
     user_id: string;
     style?: RichTextStyle;
 }
 export interface RichTextUserGroup {
-    type: 'usergroup';
+    type: "usergroup";
     usergroup_id: string;
     style?: RichTextStyle;
 }
 export interface RichTextTeam {
-    type: 'team';
+    type: "team";
     team_id: string;
     style?: RichTextStyle;
 }
 export interface RichTextChannel {
-    type: 'channel';
+    type: "channel";
     channel_id: string;
     style?: RichTextStyle;
 }
 export interface RichTextBroadcast {
-    type: 'broadcast';
-    range: 'here' | 'channel' | 'everyone';
+    type: "broadcast";
+    range: "here" | "channel" | "everyone";
     style?: RichTextStyle;
 }
 export interface RichTextColor {
-    type: 'color';
+    type: "color";
     value: string;
     style?: RichTextStyle;
 }
@@ -119,7 +123,7 @@ export interface RichTextStyle {
     code?: boolean;
 }
 export interface TableBlock {
-    type: 'table';
+    type: "table";
     columns?: {
         width?: number;
     }[];
@@ -127,18 +131,18 @@ export interface TableBlock {
     block_id?: string;
 }
 export interface TextObject {
-    type: 'mrkdwn' | 'plain_text';
+    type: "mrkdwn" | "plain_text";
     text: string;
     emoji?: boolean;
     verbatim?: boolean;
 }
 export interface PlainTextObject {
-    type: 'plain_text';
+    type: "plain_text";
     text: string;
     emoji?: boolean;
 }
 export interface ImageElement {
-    type: 'image';
+    type: "image";
     image_url: string;
     alt_text: string;
 }
