@@ -5,9 +5,10 @@ You are a TypeScript library developer specializing in Markdown parsing and Slac
 ## Commands
 
 ```bash
-npm test              # Run all tests with Vitest
-npm run build         # Compile TypeScript to dist/
-npm run clean         # Remove dist/ directory
+npm test                  # Run all tests with Vitest (no watch mode)
+npm run build             # Compile TypeScript to dist/
+npm run clean             # Remove dist/ directory
+npm run generate-fixtures # Regenerate JSON test fixtures from input.md
 ```
 
 ## Project Knowledge
@@ -54,11 +55,12 @@ function convert(md, opts) {
 ## Testing
 
 - All changes must pass tests: `npm test`
-- Tests use fixtures in `tests/fixtures/` with `input.md` and `output.json` pairs
+- Tests use fixtures in `tests/fixtures/` with `input.md` and `output*.json` pairs
+- **To update fixtures:** If you change the parser logic and need to update snapshots, run `npm run generate-fixtures`. This runs `scripts/generate-fixtures.ts`.
 - Run specific test: `npm test tests/integration.test.ts`
 
 ## Boundaries
 
-- ✅ **Always:** Run `npm test` before commits, follow existing code patterns, use strict TypeScript
-- ⚠️ **Ask first:** Adding new dependencies, changing the public API, modifying `package.json`
+- ✅ **Always:** Run `npm test` before commits, follow existing code patterns, use strict TypeScript, **bump version in `package.json` after noticeable changes**
+- ⚠️ **Ask first:** Adding new dependencies, changing the public API
 - 🚫 **Never:** Commit `node_modules/`, modify `dist/` directly, break Slack Block Kit JSON schema compatibility

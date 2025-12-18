@@ -64,11 +64,42 @@ function isListNode(
 	return node.type === "list";
 }
 
+/**
+ * Preprocess markdown to "unwrap" lists that are entirely wrapped in formatting.
+ * For example: "**1. Item**" becomes "1. **Item**"
+ * This allows the markdown parser to recognize them as list items.
+ */
+function preprocessMarkdown(markdown: string): string {
+	const lines = markdown.split("\n");
+	const processedLines = lines.map((line) => {
+		const trimmed = line.trim();
+		// Match patterns like **1. item**, *1. item*, ~1. item~, **- item**, etc.
+		// Group 1: opening format (** or * or _ or ~)
+		// Group 2: list marker (1. or - or * or +)
+		// Group 3: spaces
+		// Group 4: content
+		// Group 5: closing format (must match Group 1)
+		const formatWrappedListRegex = /^(\*\*|\*|_|~)(\d+\.|\*|-|\+)(\s+)(.*?)\1$/;
+		const match = trimmed.match(formatWrappedListRegex);
+
+		if (match) {
+			const [_, format, marker, spaces, content] = match;
+			// Preserve leading whitespace of the original line
+			const leadingWhitespace = line.match(/^\s*/)?.[0] || "";
+			return `${leadingWhitespace}${marker}${spaces}${format}${content}${format}`;
+		}
+		return line;
+	});
+
+	return processedLines.join("\n");
+}
+
 export function parseMarkdown(
 	markdown: string,
 	options: MarkdownToBlocksOptions = {},
 ): Block[] {
-	const ast: Root = fromMarkdown(markdown, {
+	const preprocessed = preprocessMarkdown(markdown);
+	const ast: Root = fromMarkdown(preprocessed, {
 		extensions: [gfm()],
 		mdastExtensions: [gfmFromMarkdown()],
 	}) as Root;

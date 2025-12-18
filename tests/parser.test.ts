@@ -638,4 +638,89 @@ describe("markdownToBlocks", () => {
 			{ type: "text", text: "@unknown_team" },
 		]);
 	});
+
+	describe("Format-wrapped lists", () => {
+		it("converts bold-wrapped list items", () => {
+			const mkd = "**1. Bold item**";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect(result).toMatchObject([
+				{
+					type: "rich_text",
+					elements: [
+						{
+							type: "rich_text_list",
+							style: "ordered",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [{ type: "text", text: "Bold item", style: { bold: true } }],
+								},
+							],
+						},
+					],
+				},
+			]);
+		});
+
+		it("converts italic-wrapped list items", () => {
+			const mkd = "*1. Italic item*";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect(result).toMatchObject([
+				{
+					type: "rich_text",
+					elements: [
+						{
+							type: "rich_text_list",
+							style: "ordered",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [{ type: "text", text: "Italic item", style: { italic: true } }],
+								},
+							],
+						},
+					],
+				},
+			]);
+		});
+
+		it("converts strike-wrapped list items", () => {
+			const mkd = "~1. Strike item~";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect(result).toMatchObject([
+				{
+					type: "rich_text",
+					elements: [
+						{
+							type: "rich_text_list",
+							style: "ordered",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [{ type: "text", text: "Strike item", style: { strike: true } }],
+								},
+							],
+						},
+					],
+				},
+			]);
+		});
+
+		it("converts nested bold-wrapped list items", () => {
+			const mkd = "- item 1\n  **- item 2**";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect((result[0] as any).elements).toMatchObject([
+				{
+					type: "rich_text_list",
+					indent: 0,
+					elements: [{ type: "rich_text_section", elements: [{ text: "item 1" }] }],
+				},
+				{
+					type: "rich_text_list",
+					indent: 1,
+					elements: [{ type: "rich_text_section", elements: [{ text: "item 2", style: { bold: true } }] }],
+				},
+			]);
+		});
+	});
 });

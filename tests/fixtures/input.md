@@ -62,3 +62,24 @@ Mentiones and styles inside preformatted block are ignored: <@U12345>, <#C00001>
 
 1. Ordered Level 1
    1. Ordered Level 2 with **bold**
+
+## Format-wrapped lists
+
+~1. Strike-wrapped list~
+
+Previously strike-wrapped lists were not supported.
+
+**2. Bold-wrapped list with nested list**
+
+Previously Bold-wrapped lists were not supported.
+
+*3. Italic-wrapped list*
+
+Previously Italic-wrapped lists were not supported.
+
+- [ ] Checkbox-wrapped list item~
+
+Previously strike-wrapped unordered lists were not supported.
+
+- Level 1 item
+  **- Nested bold item**

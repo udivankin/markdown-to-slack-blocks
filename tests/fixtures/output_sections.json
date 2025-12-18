@@ -696,5 +696,173 @@
         ]
       }
     ]
+  },
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Format-wrapped lists"
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Strike-wrapped list",
+                "style": {
+                  "strike": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "Previously strike-wrapped lists were not supported."
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Bold-wrapped list with nested list",
+                "style": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "Previously Bold-wrapped lists were not supported."
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Italic-wrapped list",
+                "style": {
+                  "italic": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "Previously Italic-wrapped lists were not supported."
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Checkbox-wrapped list item~"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "Previously strike-wrapped unordered lists were not supported."
+    }
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Level 1 item"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "rich_text_list",
+        "style": "bullet",
+        "indent": 1,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Nested bold item",
+                "style": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
