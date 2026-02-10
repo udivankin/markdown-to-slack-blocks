@@ -1064,5 +1064,29 @@
         ]
       }
     ]
+  },
+  {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_list",
+        "style": "ordered",
+        "indent": 0,
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "text",
+                "text": "Bold-wrapped ordered list with nested list prefixed with heading",
+                "style": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -21,8 +21,50 @@ function isParagraphNode(node) {
 function isListNode(node) {
     return node.type === "list";
 }
+/**
+ * Preprocess markdown to "unwrap" lists that are entirely wrapped in formatting.
+ * For example: "**1. Item**" becomes "1. **Item**"
+ * Also handles heading-prefixed format-wrapped lists:
+ * "### **1. Item**" becomes "###\n1. **Item**"
+ * This allows the markdown parser to recognize them as list items.
+ */
+function preprocessMarkdown(markdown) {
+    const lines = markdown.split("\n");
+    const processedLines = [];
+    for (const line of lines) {
+        const trimmed = line.trim();
+        // Match heading-prefixed format-wrapped lists
+        // e.g. "### **1. Item**" or "## *- Item*"
+        const headingFormatWrappedListRegex = /^(#{1,6})\s+(\*\*|\*|_|~)(\d+\.|\*|-|\+)(\s+)(.*?)\2$/;
+        const headingMatch = trimmed.match(headingFormatWrappedListRegex);
+        if (headingMatch) {
+            const [_, _heading, format, marker, spaces, content] = headingMatch;
+            // Split into an empty line (to end the heading context) and a format-unwrapped list line
+            processedLines.push(`${marker}${spaces}${format}${content}${format}`);
+            continue;
+        }
+        // Match patterns like **1. item**, *1. item*, ~1. item~, **- item**, etc.
+        // Group 1: opening format (** or * or _ or ~)
+        // Group 2: list marker (1. or - or * or +)
+        // Group 3: spaces
+        // Group 4: content
+        // Group 5: closing format (must match Group 1)
+        const formatWrappedListRegex = /^(\*\*|\*|_|~)(\d+\.|\*|-|\+)(\s+)(.*?)\1$/;
+        const match = trimmed.match(formatWrappedListRegex);
+        if (match) {
+            const [_, format, marker, spaces, content] = match;
+            // Preserve leading whitespace of the original line
+            const leadingWhitespace = line.match(/^\s*/)?.[0] || "";
+            processedLines.push(`${leadingWhitespace}${marker}${spaces}${format}${content}${format}`);
+            continue;
+        }
+        processedLines.push(line);
+    }
+    return processedLines.join("\n");
+}
 function parseMarkdown(markdown, options = {}) {
-    const ast = (0, mdast_util_from_markdown_1.fromMarkdown)(markdown, {
+    const preprocessed = preprocessMarkdown(markdown);
+    const ast = (0, mdast_util_from_markdown_1.fromMarkdown)(preprocessed, {
         extensions: [(0, micromark_extension_gfm_1.gfm)()],
         mdastExtensions: [(0, mdast_util_gfm_1.gfmFromMarkdown)()],
     });

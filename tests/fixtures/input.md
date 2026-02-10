@@ -83,3 +83,5 @@ Previously strike-wrapped unordered lists were not supported.
 
 - Level 1 item
   **- Nested bold item**
+
+### **1. Bold-wrapped ordered list with nested list prefixed with heading**

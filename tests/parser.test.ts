@@ -722,5 +722,49 @@ describe("markdownToBlocks", () => {
 				},
 			]);
 		});
+
+		it("converts heading-prefixed bold-wrapped list (rich_text)", () => {
+			const mkd = "### **1. Bold heading list**";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect(result).toMatchObject([
+				{
+					type: "rich_text",
+					elements: [
+						{
+							type: "rich_text_list",
+							style: "ordered",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [{ type: "text", text: "Bold heading list", style: { bold: true } }],
+								},
+							],
+						},
+					],
+				},
+			]);
+		});
+
+		it("converts heading-prefixed bold-wrapped list (sections)", () => {
+			const mkd = "### **1. Bold heading list**";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: true });
+			expect(result).toMatchObject([
+				{
+					type: "rich_text",
+					elements: [
+						{
+							type: "rich_text_list",
+							style: "ordered",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [{ type: "text", text: "Bold heading list", style: { bold: true } }],
+								},
+							],
+						},
+					],
+				},
+			]);
+		});
 	});
 });

@@ -67,12 +67,30 @@ function isListNode(
 /**
  * Preprocess markdown to "unwrap" lists that are entirely wrapped in formatting.
  * For example: "**1. Item**" becomes "1. **Item**"
+ * Also handles heading-prefixed format-wrapped lists:
+ * "### **1. Item**" becomes "###\n1. **Item**"
  * This allows the markdown parser to recognize them as list items.
  */
 function preprocessMarkdown(markdown: string): string {
 	const lines = markdown.split("\n");
-	const processedLines = lines.map((line) => {
+	const processedLines: string[] = [];
+
+	for (const line of lines) {
 		const trimmed = line.trim();
+
+		// Match heading-prefixed format-wrapped lists
+		// e.g. "### **1. Item**" or "## *- Item*"
+		const headingFormatWrappedListRegex =
+			/^(#{1,6})\s+(\*\*|\*|_|~)(\d+\.|\*|-|\+)(\s+)(.*?)\2$/;
+		const headingMatch = trimmed.match(headingFormatWrappedListRegex);
+
+		if (headingMatch) {
+			const [_, _heading, format, marker, spaces, content] = headingMatch;
+			// Split into an empty line (to end the heading context) and a format-unwrapped list line
+			processedLines.push(`${marker}${spaces}${format}${content}${format}`);
+			continue;
+		}
+
 		// Match patterns like **1. item**, *1. item*, ~1. item~, **- item**, etc.
 		// Group 1: opening format (** or * or _ or ~)
 		// Group 2: list marker (1. or - or * or +)
@@ -86,10 +104,14 @@ function preprocessMarkdown(markdown: string): string {
 			const [_, format, marker, spaces, content] = match;
 			// Preserve leading whitespace of the original line
 			const leadingWhitespace = line.match(/^\s*/)?.[0] || "";
-			return `${leadingWhitespace}${marker}${spaces}${format}${content}${format}`;
+			processedLines.push(
+				`${leadingWhitespace}${marker}${spaces}${format}${content}${format}`,
+			);
+			continue;
 		}
-		return line;
-	});
+
+		processedLines.push(line);
+	}
 
 	return processedLines.join("\n");
 }
