@@ -5,6 +5,7 @@ import { validateOptions } from "./validator";
 // Re-export types for consumers
 export * from "./types";
 export {
+	blocksToMarkdown,
 	blocksToPlainText,
 	splitBlocks,
 	splitBlocksWithText,

@@ -1,0 +1,14 @@
+{
+  "users": {
+    "jdoe": "U12345"
+  },
+  "channels": {
+    "general": "C00001"
+  },
+  "userGroups": {
+    "devs": "S12345"
+  },
+  "teams": {
+    "T123456": "T123456"
+  }
+}

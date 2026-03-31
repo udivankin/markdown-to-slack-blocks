@@ -206,3 +206,12 @@ export interface MarkdownToBlocksOptions {
 	detectColors?: boolean; // Default true
 	preferSectionBlocks?: boolean; // Default true - use section blocks for simple paragraphs
 }
+
+export interface BlocksToMarkdownOptions {
+	mentions?: {
+		users?: Record<string, string>; // User ID -> username
+		channels?: Record<string, string>; // Channel ID -> channel name
+		userGroups?: Record<string, string>; // User Group ID -> group name
+		teams?: Record<string, string>; // Team ID -> team name
+	};
+}

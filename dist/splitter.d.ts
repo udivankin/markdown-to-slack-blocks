@@ -1,4 +1,4 @@
-import type { Block } from "./types";
+import type { Block, BlocksToMarkdownOptions } from "./types";
 export interface SplitBlocksOptions {
     /** Maximum number of blocks per message. Default: 40 */
     maxBlocks?: number;
@@ -22,6 +22,10 @@ export declare function splitBlocks(blocks: Block[], options?: SplitBlocksOption
  * Splits blocks and also returns a plain-text fallback for each batch, suitable for postMessage `text`.
  */
 export declare function splitBlocksWithText(blocks: Block[], options?: SplitBlocksOptions): SplitBlocksResult[];
+/**
+ * Renders a block array back into best-effort Markdown.
+ */
+export declare function blocksToMarkdown(blocks: Block[], options?: BlocksToMarkdownOptions): string;
 /**
  * Generates a lightweight plain-text fallback from a block batch.
  */

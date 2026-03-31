@@ -181,3 +181,31 @@ const text = blocksToPlainText(blocks);
 ```
 
 The function walks the rendered blocks and returns a joined string that keeps list markers, quotes, tables (as `cell | cell` rows), mentions, dates (using the provided fallback or ISO string), and basic formatting markers where possible. The output is best-effort and is intended for concise fallbacks rather than full fidelity rendering.
+
+### Markdown rendering
+
+If you need a best-effort Markdown representation of an existing block array, use `blocksToMarkdown`:
+
+```typescript
+import { blocksToMarkdown } from 'markdown-to-slack-blocks';
+
+const markdown = blocksToMarkdown(blocks);
+// -> "# Title\n\nParagraph with **bold** text" or similar
+```
+
+If you want Slack IDs rendered back to visible mention names (which might be useful for LLMs), pass the inverse mention map:
+
+```typescript
+const markdown = blocksToMarkdown(blocks, {
+    mentions: {
+        users: { 'U123456': 'username' },
+        channels: { 'C123456': 'general' },
+        userGroups: { 'S123456': 'engineers' },
+        teams: { 'T123456': 'myteam' }
+    }
+});
+```
+
+With these options, mentions like `<@U123456>` or `<#C123456>` are rendered as `@username` and `#general` where possible. The same ID format validation applies to these reverse mention maps.
+
+The renderer converts `rich_text`, section `mrkdwn`, code blocks, quotes, lists, tables, images, and Slack entities back into normalized Markdown. Because Slack blocks do not preserve every detail of the original source, the output is canonicalized rather than byte-for-byte identical to the input, but it round-trips cleanly for this library's generated blocks.

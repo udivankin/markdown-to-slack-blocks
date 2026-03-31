@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+	blocksToMarkdown,
 	markdownToBlocks,
 	splitBlocks,
 	splitBlocksWithText,
@@ -7,71 +8,68 @@ import {
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+const fixturesDir = path.join(__dirname, "fixtures");
+const mentions = JSON.parse(
+	fs.readFileSync(path.join(fixturesDir, "mentions.json"), "utf-8"),
+);
+const reversedMentions = JSON.parse(
+	fs.readFileSync(path.join(fixturesDir, "mentions.reversed.json"), "utf-8"),
+);
+
+function createOptions(preferSectionBlocks?: boolean) {
+	return {
+		mentions,
+		detectColors: true,
+		...(preferSectionBlocks === undefined ? {} : { preferSectionBlocks }),
+	};
+}
+
 describe("Integration Test", () => {
 	it("converts full_features.md to expected JSON", () => {
-		const mdPath = path.join(__dirname, "fixtures", "input.md");
-		const jsonPath = path.join(__dirname, "fixtures", "output_rich_text.json");
+		const mdPath = path.join(fixturesDir, "input.md");
+		const jsonPath = path.join(fixturesDir, "output_rich_text.json");
 
 		const markdown = fs.readFileSync(mdPath, "utf-8");
 		const expectedJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 
-		const options = {
-			mentions: {
-				users: { jdoe: "U12345" },
-				channels: { general: "C00001" },
-				userGroups: { devs: "S12345" },
-				teams: { T123456: "T123456" },
-			},
-			detectColors: true,
-			preferSectionBlocks: false,
-		};
-
-		const result = markdownToBlocks(markdown, options);
+		const result = markdownToBlocks(markdown, createOptions(false));
 
 		expect(result).toEqual(expectedJson);
 	});
 
 	it("converts full_features.md to section blocks JSON", () => {
-		const mdPath = path.join(__dirname, "fixtures", "input.md");
-		const jsonPath = path.join(__dirname, "fixtures", "output_sections.json");
+		const mdPath = path.join(fixturesDir, "input.md");
+		const jsonPath = path.join(fixturesDir, "output_sections.json");
 
 		const markdown = fs.readFileSync(mdPath, "utf-8");
 		const expectedJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 
-		const options = {
-			mentions: {
-				users: { jdoe: "U12345" },
-				channels: { general: "C00001" },
-				userGroups: { devs: "S12345" },
-				teams: { T123456: "T123456" },
-			},
-			detectColors: true,
-			preferSectionBlocks: true,
-		};
-
-		const result = markdownToBlocks(markdown, options);
+		const result = markdownToBlocks(markdown, createOptions(true));
 
 		expect(result).toEqual(expectedJson);
 	});
 
+	it("converts full_features.md to expected section blocks Markdown", () => {
+		const mdPath = path.join(fixturesDir, "input.md");
+		const markdownPath = path.join(fixturesDir, "output_sections.md");
+
+		const markdown = fs.readFileSync(mdPath, "utf-8");
+		const expectedMarkdown = fs.readFileSync(markdownPath, "utf-8").trimEnd();
+
+		const blocks = markdownToBlocks(markdown, createOptions(true));
+		const result = blocksToMarkdown(blocks, { mentions: reversedMentions });
+
+		expect(result).toBe(expectedMarkdown);
+	});
+
 	it("splits large content that exceeds Slack limits", () => {
-		const mdPath = path.join(__dirname, "fixtures", "input.md");
+		const mdPath = path.join(fixturesDir, "input.md");
 		const markdown = fs.readFileSync(mdPath, "utf-8");
 
 		// Repeat the markdown content multiple times to exceed limits
 		const largeMarkdown = Array(10).fill(markdown).join("\n\n---\n\n");
 
-		const options = {
-			mentions: {
-				users: { jdoe: "U12345" },
-				channels: { general: "C00001" },
-				userGroups: { devs: "S12345" },
-				teams: { T123456: "T123456" },
-			},
-			detectColors: true,
-		};
-
-		const blocks = markdownToBlocks(largeMarkdown, options);
+		const blocks = markdownToBlocks(largeMarkdown, createOptions());
 		const batches = splitBlocks(blocks);
 
 		// Should result in multiple batches
@@ -94,13 +92,9 @@ describe("Integration Test", () => {
 	});
 
 	it("converts input_long.md to expected blocks and split batches", () => {
-		const mdPath = path.join(__dirname, "fixtures", "input_long.md");
-		const blocksJsonPath = path.join(__dirname, "fixtures", "output_long.json");
-		const splitJsonPath = path.join(
-			__dirname,
-			"fixtures",
-			"output_long_split.json",
-		);
+		const mdPath = path.join(fixturesDir, "input_long.md");
+		const blocksJsonPath = path.join(fixturesDir, "output_long.json");
+		const splitJsonPath = path.join(fixturesDir, "output_long_split.json");
 
 		const markdown = fs.readFileSync(mdPath, "utf-8");
 		const expectedBlocks = JSON.parse(fs.readFileSync(blocksJsonPath, "utf-8"));

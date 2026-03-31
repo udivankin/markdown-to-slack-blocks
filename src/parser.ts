@@ -479,9 +479,15 @@ function processTextNode(
 			const channelId = match[6];
 			elements.push(withStyle({ type: "channel", channel_id: channelId }));
 		} else if (match[8]) {
-			// Team: <!subteam^ID>
-			const teamId = match[8];
-			elements.push(withStyle({ type: "team", team_id: teamId }));
+			// User Group / Team: <!subteam^ID>
+			const subteamId = match[8];
+			if (subteamId.startsWith("S")) {
+				elements.push(
+					withStyle({ type: "usergroup", usergroup_id: subteamId }),
+				);
+			} else {
+				elements.push(withStyle({ type: "team", team_id: subteamId }));
+			}
 		} else if (match[10]) {
 			// Date: <!date^...|...>
 			const timestamp = parseInt(match[10], 10);

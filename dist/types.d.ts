@@ -156,4 +156,12 @@ export interface MarkdownToBlocksOptions {
     detectColors?: boolean;
     preferSectionBlocks?: boolean;
 }
+export interface BlocksToMarkdownOptions {
+    mentions?: {
+        users?: Record<string, string>;
+        channels?: Record<string, string>;
+        userGroups?: Record<string, string>;
+        teams?: Record<string, string>;
+    };
+}
 //# sourceMappingURL=types.d.ts.map

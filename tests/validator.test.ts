@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { validateOptions } from "../src/validator";
-import type { MarkdownToBlocksOptions } from "../src/types";
+import {
+	validateBlocksToMarkdownOptions,
+	validateOptions,
+} from "../src/validator";
+import type {
+	BlocksToMarkdownOptions,
+	MarkdownToBlocksOptions,
+} from "../src/types";
 
 describe("validateOptions", () => {
 	it("allows valid options", () => {
@@ -89,5 +95,43 @@ describe("validateOptions", () => {
 
 	it("allows no options", () => {
 		expect(() => validateOptions(undefined)).not.toThrow();
+	});
+});
+
+describe("validateBlocksToMarkdownOptions", () => {
+	it("allows valid reverse mention options", () => {
+		const options: BlocksToMarkdownOptions = {
+			mentions: {
+				users: {
+					U12345: "jdoe",
+					W12345: "sally",
+				},
+				channels: {
+					C12345: "general",
+				},
+				userGroups: {
+					S12345: "devs",
+				},
+				teams: {
+					T12345: "team",
+				},
+			},
+		};
+
+		expect(() => validateBlocksToMarkdownOptions(options)).not.toThrow();
+	});
+
+	it("throws for invalid reverse mention keys", () => {
+		const options: BlocksToMarkdownOptions = {
+			mentions: {
+				channels: {
+					U12345: "general",
+				},
+			},
+		};
+
+		expect(() => validateBlocksToMarkdownOptions(options)).toThrow(
+			/Invalid Channel ID key/,
+		);
 	});
 });

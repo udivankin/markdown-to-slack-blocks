@@ -1,18 +1,23 @@
-import { markdownToBlocks, splitBlocksWithText } from "../src/index";
+import {
+	blocksToMarkdown,
+	markdownToBlocks,
+	splitBlocksWithText,
+} from "../src/index";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 const fixturesDir = path.join(__dirname, "..", "tests", "fixtures");
 const mdPath = path.join(fixturesDir, "input.md");
 const markdown = fs.readFileSync(mdPath, "utf-8");
+const mentions = JSON.parse(
+	fs.readFileSync(path.join(fixturesDir, "mentions.json"), "utf-8"),
+);
+const reversedMentions = JSON.parse(
+	fs.readFileSync(path.join(fixturesDir, "mentions.reversed.json"), "utf-8"),
+);
 
 const baseOptions = {
-	mentions: {
-		users: { jdoe: "U12345" },
-		channels: { general: "C00001" },
-		userGroups: { devs: "S12345" },
-		teams: { T123456: "T123456" },
-	},
+	mentions,
 	detectColors: true,
 };
 
@@ -37,6 +42,12 @@ fs.writeFileSync(
 	JSON.stringify(sectionBlocks, null, 2),
 );
 console.log("✓ Generated output_sections.json");
+
+fs.writeFileSync(
+	path.join(fixturesDir, "output_sections.md"),
+	`${blocksToMarkdown(sectionBlocks, { mentions: reversedMentions })}\n`,
+);
+console.log("✓ Generated output_sections.md");
 
 // Generate long content output (blocks and split batches)
 const longMdPath = path.join(fixturesDir, "input_long.md");

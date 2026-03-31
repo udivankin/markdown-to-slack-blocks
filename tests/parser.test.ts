@@ -289,6 +289,20 @@ describe("markdownToBlocks", () => {
 			});
 		});
 
+		it("converts User Group Mentions", () => {
+			const mkd = "<!subteam^S123456>";
+			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });
+			expect(result[0]).toMatchObject({
+				type: "rich_text",
+				elements: [
+					{
+						type: "rich_text_section",
+						elements: [{ type: "usergroup", usergroup_id: "S123456" }],
+					},
+				],
+			});
+		});
+
 		it("converts Channels", () => {
 			const mkd = "<#C123456>";
 			const result = markdownToBlocks(mkd, { preferSectionBlocks: false });

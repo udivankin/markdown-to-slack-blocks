@@ -1,14 +1,21 @@
 import type {
 	Block,
+	BlocksToMarkdownOptions,
 	HeaderBlock,
+	ImageElement,
 	PlainTextObject,
 	RichTextBlock,
 	RichTextElement,
+	RichTextList,
+	RichTextQuote,
+	RichTextSection,
 	RichTextSectionElement,
+	RichTextStyle,
 	RichTextPreformatted,
 	SectionBlock,
 	TextObject,
 } from "./types";
+import { validateBlocksToMarkdownOptions } from "./validator";
 
 export interface SplitBlocksOptions {
 	/** Maximum number of blocks per message. Default: 40 */
@@ -425,6 +432,585 @@ function chunkString(str: string, limit: number): string[] {
 	}
 
 	return chunks;
+}
+
+/**
+ * Renders a block array back into best-effort Markdown.
+ */
+export function blocksToMarkdown(
+	blocks: Block[],
+	options?: BlocksToMarkdownOptions,
+): string {
+	validateBlocksToMarkdownOptions(options);
+
+	const parts: string[] = [];
+
+	for (const block of blocks) {
+		const rendered = renderBlockAsMarkdown(block, options).trim();
+		if (rendered) parts.push(rendered);
+	}
+
+	return parts.join("\n\n");
+}
+
+function renderBlockAsMarkdown(
+	block: Block,
+	options?: BlocksToMarkdownOptions,
+): string {
+	switch (block.type) {
+		case "section":
+			return renderSectionBlockAsMarkdown(block, options);
+		case "header":
+			return `# ${block.text.text}`;
+		case "context":
+			return block.elements
+				.map((element) =>
+					element.type === "image"
+						? renderImageElementAsMarkdown(element)
+						: renderTextObjectAsMarkdown(element, options),
+				)
+				.filter(Boolean)
+				.join(" ");
+		case "rich_text":
+			return renderRichTextBlockAsMarkdown(block, options);
+		case "divider":
+			return "---";
+		case "image":
+			return renderImageBlockAsMarkdown(block);
+		case "table":
+			return renderTableBlockAsMarkdown(block, options);
+		default:
+			return "";
+	}
+}
+
+function renderSectionBlockAsMarkdown(
+	block: SectionBlock,
+	options?: BlocksToMarkdownOptions,
+): string {
+	const parts: string[] = [];
+
+	const text = renderTextObjectAsMarkdown(block.text, options);
+	if (text) parts.push(text);
+
+	if (block.fields?.length) {
+		const renderedFields = block.fields
+			.map((field) => renderTextObjectAsMarkdown(field, options))
+			.filter(Boolean)
+			.join("\n");
+		if (renderedFields) parts.push(renderedFields);
+	}
+
+	if (isImageElement(block.accessory)) {
+		parts.push(renderImageElementAsMarkdown(block.accessory));
+	}
+
+	return parts.join("\n\n");
+}
+
+function renderTextObjectAsMarkdown(
+	text?: TextObject | PlainTextObject,
+	options?: BlocksToMarkdownOptions,
+): string {
+	if (!text) return "";
+	return text.type === "mrkdwn"
+		? convertMrkdwnToMarkdown(text.text, options)
+		: text.text;
+}
+
+function renderRichTextBlockAsMarkdown(
+	block: RichTextBlock,
+	options?: BlocksToMarkdownOptions,
+): string {
+	const heading = renderRichTextHeadingAsMarkdown(block);
+	if (heading) return heading;
+
+	const rendered = block.elements
+		.map((element) => renderRichTextElementAsMarkdown(element, options))
+		.filter(
+			(part): part is RenderedRichTextElement => part.markdown.length > 0,
+		);
+
+	if (rendered.length === 0) return "";
+
+	let markdown = rendered[0].markdown;
+	for (let index = 1; index < rendered.length; index++) {
+		const previous = rendered[index - 1];
+		const current = rendered[index];
+		const separator =
+			previous.kind === "list" && current.kind === "list" ? "\n" : "\n\n";
+		markdown += separator + current.markdown;
+	}
+
+	return markdown;
+}
+
+function renderRichTextHeadingAsMarkdown(block: RichTextBlock): string {
+	if (block.elements.length !== 1) return "";
+
+	const [element] = block.elements;
+	if (element.type !== "rich_text_section" || element.elements.length !== 1) {
+		return "";
+	}
+
+	const [textElement] = element.elements;
+	if (
+		textElement.type !== "text" ||
+		!textElement.style?.bold ||
+		textElement.style.italic ||
+		textElement.style.strike ||
+		textElement.style.code
+	) {
+		return "";
+	}
+
+	return `### ${textElement.text}`;
+}
+
+type RenderedRichTextElement = {
+	kind: "section" | "list" | "preformatted" | "quote";
+	markdown: string;
+};
+
+function renderRichTextElementAsMarkdown(
+	element: RichTextElement,
+	options?: BlocksToMarkdownOptions,
+): RenderedRichTextElement {
+	switch (element.type) {
+		case "rich_text_section":
+			return {
+				kind: "section",
+				markdown: renderRichTextSectionAsMarkdown(element, options),
+			};
+		case "rich_text_list":
+			return {
+				kind: "list",
+				markdown: renderRichTextListAsMarkdown(element, options),
+			};
+		case "rich_text_preformatted":
+			return {
+				kind: "preformatted",
+				markdown: renderRichTextPreformattedAsMarkdown(element, options),
+			};
+		case "rich_text_quote":
+			return {
+				kind: "quote",
+				markdown: renderRichTextQuoteAsMarkdown(element, options),
+			};
+		default:
+			return {
+				kind: "section",
+				markdown: "",
+			};
+	}
+}
+
+function renderRichTextSectionAsMarkdown(
+	section: RichTextSection,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return section.elements
+		.map((element) => renderRichTextSectionElementAsMarkdown(element, options))
+		.join("");
+}
+
+function renderRichTextListAsMarkdown(
+	list: RichTextList,
+	options?: BlocksToMarkdownOptions,
+): string {
+	const indentUnit = list.style === "ordered" ? "   " : "  ";
+	const indent = indentUnit.repeat(list.indent ?? 0);
+	const start = list.offset ?? 1;
+
+	return list.elements
+		.map((item, index) => {
+			const marker = list.style === "ordered" ? `${start + index}. ` : "- ";
+			const content = renderRichTextSectionAsMarkdown(item, options);
+			return indentMultilineMarkdown(`${indent}${marker}`, content);
+		})
+		.join("\n");
+}
+
+function renderRichTextPreformattedAsMarkdown(
+	element: RichTextPreformatted,
+	options?: BlocksToMarkdownOptions,
+): string {
+	const text = element.elements
+		.map((item) => renderRichTextSectionElementAsMarkdown(item, options))
+		.join("");
+	return wrapFencedCodeBlock(text);
+}
+
+function renderRichTextQuoteAsMarkdown(
+	element: RichTextQuote,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderRichTextSectionAsMarkdown(
+		{
+			type: "rich_text_section",
+			elements: element.elements,
+		},
+		options,
+	)
+		.split("\n")
+		.map((line) => `> ${line}`)
+		.join("\n");
+}
+
+function renderRichTextSectionElementAsMarkdown(
+	element: RichTextSectionElement,
+	options?: BlocksToMarkdownOptions,
+): string {
+	switch (element.type) {
+		case "text":
+			return applyMarkdownStyle(element.text, element.style);
+		case "link": {
+			const content =
+				element.text && element.text.length > 0
+					? `[${element.text}](<${element.url}>)`
+					: element.url;
+			return applyMarkdownStyle(content, element.style);
+		}
+		case "emoji":
+			return applyMarkdownStyle(`:${element.name}:`, element.style);
+		case "date": {
+			const fallback =
+				element.fallback ?? new Date(element.timestamp * 1000).toISOString();
+			const content = `<!date^${element.timestamp}^${element.format}|${fallback}>`;
+			return applyMarkdownStyle(content, element.style);
+		}
+		case "user":
+			return applyMarkdownStyle(
+				renderUserMentionAsMarkdown(element.user_id, options),
+				element.style,
+			);
+		case "usergroup":
+			return applyMarkdownStyle(
+				renderUserGroupMentionAsMarkdown(element.usergroup_id, options),
+				element.style,
+			);
+		case "team":
+			return applyMarkdownStyle(
+				renderTeamMentionAsMarkdown(element.team_id, options),
+				element.style,
+			);
+		case "channel":
+			return applyMarkdownStyle(
+				renderChannelMentionAsMarkdown(element.channel_id, options),
+				element.style,
+			);
+		case "broadcast":
+			return applyMarkdownStyle(`<!${element.range}>`, element.style);
+		case "color":
+			return applyMarkdownStyle(element.value, element.style);
+		default:
+			return "";
+	}
+}
+
+function renderImageBlockAsMarkdown(block: {
+	image_url: string;
+	alt_text: string;
+	title?: PlainTextObject;
+}): string {
+	const title = block.title?.text
+		? ` "${block.title.text.replace(/"/g, '\\"')}"`
+		: "";
+	return `![${block.alt_text}](<${block.image_url}>${title})`;
+}
+
+function renderImageElementAsMarkdown(element: ImageElement): string {
+	return `![${element.alt_text}](<${element.image_url}>)`;
+}
+
+function renderTableBlockAsMarkdown(
+	block: Extract<Block, { type: "table" }>,
+	options?: BlocksToMarkdownOptions,
+): string {
+	if (block.rows.length === 0 || block.rows[0].length === 0) {
+		return "";
+	}
+
+	const rows = block.rows.map(
+		(row) =>
+			`| ${row.map((cell) => renderTableCellAsMarkdown(cell, options)).join(" | ")} |`,
+	);
+	const separator = `| ${block.rows[0].map(() => "---").join(" | ")} |`;
+
+	return [rows[0], separator, ...rows.slice(1)].join("\n");
+}
+
+function renderTableCellAsMarkdown(
+	cell: RichTextBlock,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderRichTextBlockAsMarkdown(cell, options)
+		.replace(/\|/g, "\\|")
+		.replace(/\n/g, "\\n");
+}
+
+function applyMarkdownStyle(text: string, style?: RichTextStyle): string {
+	if (!style) return text;
+
+	let result = text;
+	if (style.code) {
+		result = wrapInlineCode(result);
+	}
+	if (style.bold) {
+		result = `**${result}**`;
+	}
+	if (style.italic) {
+		result = `*${result}*`;
+	}
+	if (style.strike) {
+		result = `~${result}~`;
+	}
+	return result;
+}
+
+function wrapInlineCode(text: string): string {
+	const fence = getBacktickFence(text, 1);
+	return `${fence}${text}${fence}`;
+}
+
+function wrapFencedCodeBlock(text: string): string {
+	const fence = getBacktickFence(text, 3);
+	return `${fence}\n${text}\n${fence}`;
+}
+
+function getBacktickFence(text: string, minimumLength: number): string {
+	const runs = text.match(/`+/g);
+	const longestRun =
+		runs?.reduce((max, run) => Math.max(max, run.length), 0) ?? 0;
+	return "`".repeat(Math.max(minimumLength, longestRun + 1));
+}
+
+function indentMultilineMarkdown(prefix: string, text: string): string {
+	const lines = text.split("\n");
+	if (lines.length === 0) return prefix.trimEnd();
+
+	const continuation = " ".repeat(prefix.length);
+	return lines
+		.map((line, index) =>
+			index === 0 ? `${prefix}${line}` : `${continuation}${line}`,
+		)
+		.join("\n");
+}
+
+function convertMrkdwnToMarkdown(
+	text: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	let result = "";
+
+	for (let index = 0; index < text.length; index++) {
+		const character = text[index];
+
+		if (character === "`") {
+			const closingIndex = text.indexOf("`", index + 1);
+			if (closingIndex !== -1) {
+				result += wrapInlineCode(text.slice(index + 1, closingIndex));
+				index = closingIndex;
+				continue;
+			}
+		}
+
+		if (character === "<") {
+			const closingIndex = text.indexOf(">", index + 1);
+			if (closingIndex !== -1) {
+				result += convertAngleBracketTokenToMarkdown(
+					text.slice(index, closingIndex + 1),
+					options,
+				);
+				index = closingIndex;
+				continue;
+			}
+		}
+
+		if (isMrkdwnStyleMarker(character) && isValidMrkdwnStyleOpen(text, index)) {
+			const closingIndex = findClosingMrkdwnStyleMarker(text, index);
+			if (closingIndex !== -1) {
+				const inner = convertMrkdwnToMarkdown(
+					text.slice(index + 1, closingIndex),
+					options,
+				);
+				result += wrapConvertedMrkdwnStyle(character, inner);
+				index = closingIndex;
+				continue;
+			}
+		}
+
+		result += character;
+	}
+
+	return result;
+}
+
+function convertAngleBracketTokenToMarkdown(
+	token: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	const userMatch = token.match(/^<@([\w.-]+)>$/);
+	if (userMatch) {
+		return renderUserMentionAsMarkdown(userMatch[1], options);
+	}
+
+	const channelMatch = token.match(/^<#([\w.-]+)>$/);
+	if (channelMatch) {
+		return renderChannelMentionAsMarkdown(channelMatch[1], options);
+	}
+
+	const subteamMatch = token.match(/^<!subteam\^([\w.-]+)>$/);
+	if (subteamMatch) {
+		const subteamId = subteamMatch[1];
+		return subteamId.startsWith("S")
+			? renderUserGroupMentionAsMarkdown(subteamId, options)
+			: renderTeamMentionAsMarkdown(subteamId, options);
+	}
+
+	if (token.startsWith("<!")) {
+		return token;
+	}
+
+	const formattedLinkMatch = token.match(/^<([^|>]+)\|(.+)>$/);
+	if (formattedLinkMatch) {
+		const [, url, label] = formattedLinkMatch;
+		return `[${convertMrkdwnToMarkdown(label, options)}](<${url}>)`;
+	}
+
+	const autoLinkMatch = token.match(/^<([^>]+)>$/);
+	if (autoLinkMatch) {
+		return autoLinkMatch[1];
+	}
+
+	return token;
+}
+
+function isMrkdwnStyleMarker(character: string): character is "*" | "_" | "~" {
+	return character === "*" || character === "_" || character === "~";
+}
+
+function isValidMrkdwnStyleOpen(text: string, index: number): boolean {
+	const previous = text[index - 1];
+	const next = text[index + 1];
+	return isMrkdwnBoundary(previous) && !isWhitespace(next);
+}
+
+function isValidMrkdwnStyleClose(text: string, index: number): boolean {
+	const previous = text[index - 1];
+	const next = text[index + 1];
+	return !isWhitespace(previous) && isMrkdwnBoundary(next);
+}
+
+function findClosingMrkdwnStyleMarker(
+	text: string,
+	openingIndex: number,
+): number {
+	const marker = text[openingIndex];
+
+	for (let index = openingIndex + 1; index < text.length; index++) {
+		const character = text[index];
+
+		if (character === "`") {
+			const closingIndex = text.indexOf("`", index + 1);
+			if (closingIndex === -1) return -1;
+			index = closingIndex;
+			continue;
+		}
+
+		if (character === "<") {
+			const closingIndex = text.indexOf(">", index + 1);
+			if (closingIndex === -1) return -1;
+			index = closingIndex;
+			continue;
+		}
+
+		if (character === marker && isValidMrkdwnStyleClose(text, index)) {
+			return index;
+		}
+	}
+
+	return -1;
+}
+
+function wrapConvertedMrkdwnStyle(
+	marker: "*" | "_" | "~",
+	text: string,
+): string {
+	if (marker === "*") return `**${text}**`;
+	if (marker === "_") return `*${text}*`;
+	return `~${text}~`;
+}
+
+function isMrkdwnBoundary(character: string | undefined): boolean {
+	if (character === undefined) return true;
+	return /[\s.,!?;:()[\]{}"'<>/-]/.test(character);
+}
+
+function isWhitespace(character: string | undefined): boolean {
+	return character !== undefined && /\s/.test(character);
+}
+
+function renderUserMentionAsMarkdown(
+	userId: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderNamedMention(
+		options?.mentions?.users?.[userId] ??
+			options?.mentions?.userGroups?.[userId] ??
+			options?.mentions?.teams?.[userId],
+		`<@${userId}>`,
+	);
+}
+
+function renderChannelMentionAsMarkdown(
+	channelId: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderNamedMention(
+		options?.mentions?.channels?.[channelId],
+		`<#${channelId}>`,
+		"#",
+	);
+}
+
+function renderUserGroupMentionAsMarkdown(
+	userGroupId: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderNamedMention(
+		options?.mentions?.userGroups?.[userGroupId],
+		`<!subteam^${userGroupId}>`,
+	);
+}
+
+function renderTeamMentionAsMarkdown(
+	teamId: string,
+	options?: BlocksToMarkdownOptions,
+): string {
+	return renderNamedMention(
+		options?.mentions?.teams?.[teamId],
+		`<!subteam^${teamId}>`,
+	);
+}
+
+function renderNamedMention(
+	name: string | undefined,
+	fallback: string,
+	prefix = "@",
+): string {
+	return name ? `${prefix}${name}` : fallback;
+}
+
+function isImageElement(element: unknown): element is ImageElement {
+	if (!element || typeof element !== "object") return false;
+
+	const accessory = element as Partial<ImageElement>;
+	return (
+		accessory.type === "image" &&
+		typeof accessory.image_url === "string" &&
+		typeof accessory.alt_text === "string"
+	);
 }
 
 /**
