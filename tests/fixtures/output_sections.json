@@ -152,52 +152,23 @@
     "type": "divider"
   },
   {
-    "type": "table",
+    "type": "data_table",
+    "caption": "Data table",
     "rows": [
       [
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": [
-                {
-                  "type": "text",
-                  "text": "Column 1"
-                }
-              ]
-            }
-          ]
+          "type": "raw_text",
+          "text": "Column 1"
         },
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": [
-                {
-                  "type": "text",
-                  "text": "Column 2"
-                }
-              ]
-            }
-          ]
+          "type": "raw_text",
+          "text": "Column 2"
         }
       ],
       [
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": [
-                {
-                  "type": "text",
-                  "text": "Cell can contain multiple paragraphs."
-                }
-              ]
-            }
-          ]
+          "type": "raw_text",
+          "text": "Cell can contain multiple paragraphs."
         },
         {
           "type": "rich_text",
@@ -300,52 +271,22 @@
       ],
       [
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": []
-            }
-          ]
+          "type": "raw_text",
+          "text": ""
         },
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": []
-            }
-          ]
+          "type": "raw_text",
+          "text": ""
         }
       ],
       [
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": [
-                {
-                  "type": "text",
-                  "text": "Cell can contain multiple paragraphs."
-                }
-              ]
-            }
-          ]
+          "type": "raw_text",
+          "text": "Cell can contain multiple paragraphs."
         },
         {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_section",
-              "elements": [
-                {
-                  "type": "text",
-                  "text": "Cells"
-                }
-              ]
-            }
-          ]
+          "type": "raw_text",
+          "text": "Cells"
         }
       ]
     ]

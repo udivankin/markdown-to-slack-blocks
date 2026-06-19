@@ -4,6 +4,7 @@ import { gfm } from "micromark-extension-gfm";
 import { gfmFromMarkdown } from "mdast-util-gfm";
 import type {
 	Block,
+	DataTableCell,
 	RichTextBlock,
 	RichTextElement,
 	RichTextSectionElement,
@@ -298,25 +299,33 @@ export function parseMarkdown(
 			});
 		} else if (node.type === "table") {
 			flushRichText();
-			const rows: RichTextBlock[][] = node.children.map((row) => {
-				return row.children.map((cell) => {
-					return {
+			const cellElements = node.children.map((row) =>
+				row.children.map((cell) =>
+					cell.children.flatMap((c) =>
+						isInlineNode(c) ? mapInlineNode(c, options) : [],
+					),
+				),
+			);
+
+			if (options.tableBlockType === "table") {
+				const rows: RichTextBlock[][] = cellElements.map((row) =>
+					row.map((elements) => ({
 						type: "rich_text",
-						elements: [
-							{
-								type: "rich_text_section",
-								elements: cell.children.flatMap((c) =>
-									isInlineNode(c) ? mapInlineNode(c, options) : [],
-								),
-							},
-						],
-					};
+						elements: [{ type: "rich_text_section", elements }],
+					})),
+				);
+				blocks.push({ type: "table", rows });
+			} else {
+				const rows: DataTableCell[][] = cellElements.map((row) =>
+					row.map((elements) => buildDataTableCell(elements)),
+				);
+				const caption = options.tableCaption ?? "Data table";
+				blocks.push({
+					type: "data_table",
+					...(caption ? { caption } : {}),
+					rows,
 				});
-			});
-			blocks.push({
-				type: "table",
-				rows: rows,
-			});
+			}
 		} else if (node.type === "html") {
 			// Handle top-level HTML blocks (e.g. Slack specific tags like <!date...> starting a line)
 			currentRichTextElements.push({
@@ -328,6 +337,53 @@ export function parseMarkdown(
 
 	flushRichText();
 	return blocks;
+}
+
+/**
+ * Build a single `data_table` cell, choosing the most specific representation
+ * for the content:
+ * - empty / unstyled plain text -> `raw_text`
+ * - unstyled plain text that is a pure number -> `raw_number`
+ * - anything else (styling, links, mentions, emoji, multiple elements) -> `rich_text`
+ */
+function buildDataTableCell(elements: RichTextSectionElement[]): DataTableCell {
+	if (elements.length === 0) {
+		return { type: "raw_text", text: "" };
+	}
+
+	if (elements.length === 1) {
+		const [element] = elements;
+		const isPlainText =
+			element.type === "text" &&
+			(element.style === undefined || Object.keys(element.style).length === 0);
+
+		if (isPlainText) {
+			const text = (element as RichTextText).text;
+			const numeric = parseNumericValue(text);
+			if (numeric !== null) {
+				return { type: "raw_number", value: numeric, text };
+			}
+			return { type: "raw_text", text };
+		}
+	}
+
+	return {
+		type: "rich_text",
+		elements: [{ type: "rich_text_section", elements }],
+	};
+}
+
+/**
+ * Returns the numeric value of a string if it represents a plain number
+ * (optionally negative, with an optional decimal part), otherwise null.
+ */
+function parseNumericValue(text: string): number | null {
+	const trimmed = text.trim();
+	if (trimmed === "" || !/^-?\d+(\.\d+)?$/.test(trimmed)) {
+		return null;
+	}
+	const value = Number(trimmed);
+	return Number.isFinite(value) ? value : null;
 }
 
 function mapInlineNode(

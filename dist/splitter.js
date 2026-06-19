@@ -368,6 +368,8 @@ function renderBlockAsMarkdown(block, options) {
             return renderImageBlockAsMarkdown(block);
         case "table":
             return renderTableBlockAsMarkdown(block, options);
+        case "data_table":
+            return renderDataTableBlockAsMarkdown(block, options);
         default:
             return "";
     }
@@ -401,6 +403,13 @@ function renderRichTextBlockAsMarkdown(block, options) {
     const heading = renderRichTextHeadingAsMarkdown(block);
     if (heading)
         return heading;
+    return renderRichTextBlockBodyAsMarkdown(block, options);
+}
+/**
+ * Renders a rich_text block's elements without the lone-bold-section "heading"
+ * shortcut. Used for table cells, where a bold cell must stay inline text.
+ */
+function renderRichTextBlockBodyAsMarkdown(block, options) {
     const rendered = block.elements
         .map((element) => renderRichTextElementAsMarkdown(element, options))
         .filter((part) => part.markdown.length > 0);
@@ -544,9 +553,23 @@ function renderTableBlockAsMarkdown(block, options) {
     return [rows[0], separator, ...rows.slice(1)].join("\n");
 }
 function renderTableCellAsMarkdown(cell, options) {
-    return renderRichTextBlockAsMarkdown(cell, options)
+    return renderRichTextBlockBodyAsMarkdown(cell, options)
         .replace(/\|/g, "\\|")
         .replace(/\n/g, "\\n");
+}
+function renderDataTableBlockAsMarkdown(block, options) {
+    if (block.rows.length === 0 || block.rows[0].length === 0) {
+        return "";
+    }
+    const rows = block.rows.map((row) => `| ${row.map((cell) => renderDataTableCellAsMarkdown(cell, options)).join(" | ")} |`);
+    const separator = `| ${block.rows[0].map(() => "---").join(" | ")} |`;
+    return [rows[0], separator, ...rows.slice(1)].join("\n");
+}
+function renderDataTableCellAsMarkdown(cell, options) {
+    const rendered = cell.type === "raw_text" || cell.type === "raw_number"
+        ? cell.text
+        : renderRichTextBlockBodyAsMarkdown(cell, options);
+    return rendered.replace(/\|/g, "\\|").replace(/\n/g, "\\n");
 }
 function applyMarkdownStyle(text, style) {
     if (!style)
@@ -814,6 +837,14 @@ function blocksToPlainText(blocks) {
             case "table":
                 return block.rows
                     .map((row) => row.map(renderRichTextBlock).join(" | "))
+                    .join("\n");
+            case "data_table":
+                return block.rows
+                    .map((row) => row
+                    .map((cell) => cell.type === "raw_text" || cell.type === "raw_number"
+                    ? cell.text
+                    : renderRichTextBlock(cell))
+                    .join(" | "))
                     .join("\n");
             default:
                 return "";

@@ -199,6 +199,42 @@ describe("splitBlocks", () => {
 	});
 
 	describe("edge cases", () => {
+		it("includes oversized data_table blocks as-is", () => {
+			const largeDataTable: Block = {
+				type: "data_table",
+				caption: "Data table",
+				rows: Array(100)
+					.fill(null)
+					.map(() => [{ type: "raw_text", text: "Cell" }]),
+			};
+			const result = splitBlocks([largeDataTable], { maxCharacters: 500 });
+			expect(
+				result.some((batch) => batch.some((b) => b.type === "data_table")),
+			).toBe(true);
+		});
+
+		it("renders data_table plain text fallback", () => {
+			const blocks: Block[] = [
+				{
+					type: "data_table",
+					caption: "Data table",
+					rows: [
+						[
+							{ type: "raw_text", text: "Name" },
+							{ type: "raw_text", text: "Amount" },
+						],
+						[
+							{ type: "raw_text", text: "Alpha" },
+							{ type: "raw_number", value: 10, text: "10" },
+						],
+					],
+				},
+			];
+			const [first] = splitBlocksWithText(blocks);
+			expect(first.text).toContain("Name | Amount");
+			expect(first.text).toContain("Alpha | 10");
+		});
+
 		it("handles single oversized non-rich_text block", () => {
 			// Tables can't really be split, so they go through as-is
 			const largeTable: Block = {

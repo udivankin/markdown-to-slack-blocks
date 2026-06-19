@@ -15,7 +15,7 @@ npm run generate-fixtures # Regenerate JSON test fixtures from input.md
 
 - **Tech Stack:** TypeScript 5.9, Node.js ≥18, Vitest 4.0, mdast-util-from-markdown 2.0
 - **Purpose:** Convert Markdown strings into Slack Block Kit JSON format
-- **Key Options:** `mentions` (user/channel/group/team mappings), `detectColors`, `preferSectionBlocks`
+- **Key Options:** `mentions` (user/channel/group/team mappings), `detectColors`, `preferSectionBlocks`, `tableBlockType` (`"data_table"` default | `"table"`), `tableCaption`
 
 ### File Structure
 

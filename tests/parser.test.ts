@@ -216,17 +216,96 @@ describe("markdownToBlocks", () => {
 		]);
 	});
 
-	it("converts tables (GFM)", () => {
+	it("converts tables to data_table blocks (GFM, default)", () => {
 		const mkd = "| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |";
 		const result = markdownToBlocks(mkd);
 		expect(result).toMatchObject([
 			{
+				type: "data_table",
+				caption: "Data table",
+				rows: [
+					// The header row is just the first row.
+					[
+						{ type: "raw_text", text: "Header 1" },
+						{ type: "raw_text", text: "Header 2" },
+					],
+					[
+						{ type: "raw_text", text: "Cell 1" },
+						{ type: "raw_text", text: "Cell 2" },
+					],
+				],
+			},
+		]);
+	});
+
+	it("chooses cell type dynamically based on content", () => {
+		const mkd =
+			"| Name | Amount | Stage |\n| --- | --- | --- |\n| Alpha | 10 | **Negotiation** |\n| Bravo | 2.5 | Waiting on *review* |";
+		const result = markdownToBlocks(mkd);
+		expect(result).toMatchObject([
+			{
+				type: "data_table",
+				rows: [
+					[
+						{ type: "raw_text", text: "Name" },
+						{ type: "raw_text", text: "Amount" },
+						{ type: "raw_text", text: "Stage" },
+					],
+					[
+						{ type: "raw_text", text: "Alpha" },
+						{ type: "raw_number", value: 10, text: "10" },
+						{
+							type: "rich_text",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [
+										{ type: "text", text: "Negotiation", style: { bold: true } },
+									],
+								},
+							],
+						},
+					],
+					[
+						{ type: "raw_text", text: "Bravo" },
+						{ type: "raw_number", value: 2.5, text: "2.5" },
+						{
+							type: "rich_text",
+							elements: [
+								{
+									type: "rich_text_section",
+									elements: [
+										{ type: "text", text: "Waiting on " },
+										{ type: "text", text: "review", style: { italic: true } },
+									],
+								},
+							],
+						},
+					],
+				],
+			},
+		]);
+	});
+
+	it("does not treat non-numeric values as raw_number", () => {
+		const mkd =
+			"| Plain | Money | Mixed |\n| --- | --- | --- |\n| text | $1.2M | 10x |";
+		const result = markdownToBlocks(mkd);
+		const row = (result[0] as { rows: { type: string }[][] }).rows[1];
+		expect(row.map((cell) => cell.type)).toEqual([
+			"raw_text",
+			"raw_text",
+			"raw_text",
+		]);
+	});
+
+	it("emits legacy table blocks when tableBlockType is 'table'", () => {
+		const mkd = "| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | 10 |";
+		const result = markdownToBlocks(mkd, { tableBlockType: "table" });
+		expect(result).toMatchObject([
+			{
 				type: "table",
 				rows: [
-					// Header row usually part of rows in Slack structure or separate?
-					// Implementation maps all row children. GFM table parser structure:
-					// table -> tableRow -> tableCell
-					// The Header row is just the first row.
 					[
 						{
 							type: "rich_text",
@@ -251,13 +330,25 @@ describe("markdownToBlocks", () => {
 						{
 							type: "rich_text",
 							elements: [
-								{ type: "rich_text_section", elements: [{ text: "Cell 2" }] },
+								{ type: "rich_text_section", elements: [{ text: "10" }] },
 							],
 						},
 					],
 				],
 			},
 		]);
+	});
+
+	it("honors a custom table caption and omits it when empty", () => {
+		const mkd = "| A | B |\n| --- | --- |\n| 1 | 2 |";
+		expect(markdownToBlocks(mkd, { tableCaption: "Deals" })[0]).toMatchObject({
+			type: "data_table",
+			caption: "Deals",
+		});
+		const noCaption = markdownToBlocks(mkd, { tableCaption: "" })[0] as {
+			caption?: string;
+		};
+		expect(noCaption.caption).toBeUndefined();
 	});
 
 	describe("Rich Text Elements (preferSectionBlocks: false)", () => {

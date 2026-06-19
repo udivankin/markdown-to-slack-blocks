@@ -1,4 +1,4 @@
-export type Block = SectionBlock | HeaderBlock | ImageBlock | ContextBlock | DividerBlock | RichTextBlock | TableBlock;
+export type Block = SectionBlock | HeaderBlock | ImageBlock | ContextBlock | DividerBlock | RichTextBlock | TableBlock | DataTableBlock;
 export interface SectionBlock {
     type: "section";
     text?: TextObject;
@@ -130,6 +130,29 @@ export interface TableBlock {
     rows: RichTextBlock[][];
     block_id?: string;
 }
+/**
+ * Slack's native `data_table` block. Unlike the legacy `table` block, each cell
+ * is dynamically typed based on its content:
+ * - `raw_text` for plain, unstyled text
+ * - `raw_number` for purely numeric values (enables Slack's number formatting/sorting)
+ * - `rich_text` for anything with styling, links, mentions, emoji, etc.
+ */
+export interface DataTableBlock {
+    type: "data_table";
+    caption?: string;
+    rows: DataTableCell[][];
+    block_id?: string;
+}
+export type DataTableCell = RawTextCell | RawNumberCell | RichTextBlock;
+export interface RawTextCell {
+    type: "raw_text";
+    text: string;
+}
+export interface RawNumberCell {
+    type: "raw_number";
+    value: number;
+    text: string;
+}
 export interface TextObject {
     type: "mrkdwn" | "plain_text";
     text: string;
@@ -155,6 +178,18 @@ export interface MarkdownToBlocksOptions {
     };
     detectColors?: boolean;
     preferSectionBlocks?: boolean;
+    /**
+     * Which block type to emit for Markdown tables.
+     * - `"data_table"` (default): Slack's native data table; cell types are chosen
+     *   dynamically per cell (`raw_text`, `raw_number`, or `rich_text`).
+     * - `"table"`: legacy table block where every cell is a `rich_text` block.
+     */
+    tableBlockType?: "data_table" | "table";
+    /**
+     * Caption applied to generated `data_table` blocks. Defaults to "Data table".
+     * Pass an empty string to omit the caption entirely.
+     */
+    tableCaption?: string;
 }
 export interface BlocksToMarkdownOptions {
     mentions?: {

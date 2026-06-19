@@ -125,6 +125,25 @@ describe("blocksToMarkdown", () => {
 		);
 	});
 
+	it("renders data_table blocks back to a markdown table", () => {
+		const blocks = markdownToBlocks(
+			"| Name | Amount | Stage |\n| --- | --- | --- |\n| Alpha | 10 | **Won** |",
+		);
+		expect(blocksToMarkdown(blocks)).toBe(
+			["| Name | Amount | Stage |", "| --- | --- | --- |", "| Alpha | 10 | **Won** |"].join(
+				"\n",
+			),
+		);
+	});
+
+	it("round-trips data_table blocks with mixed cell types", () => {
+		const markdown =
+			"| Name | Amount | Stage |\n| --- | --- | --- |\n| Alpha | 10 | **Won** |\n| Bravo | 2.5 | Waiting on *review* |";
+		const blocks = markdownToBlocks(markdown);
+		const roundTripped = markdownToBlocks(blocksToMarkdown(blocks));
+		expect(roundTripped).toEqual(blocks);
+	});
+
 	it("round-trips the rich_text fixture output", () => {
 		const jsonPath = path.join(fixturesDir, "output_rich_text.json");
 		const expectedBlocks = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
