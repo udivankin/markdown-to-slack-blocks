@@ -1,6 +1,6 @@
 {
 	"name": "markdown-to-slack-blocks",
-	"version": "1.6.0",
+	"version": "1.6.1",
 	"description": "A powerful, type-safe library to convert Markdown (incl. GFM tables, code, mentions, and LLM output) into Slack Block Kit JSON — and back. Supports Slack's native data_table block with dynamic cell typing.",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
