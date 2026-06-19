@@ -18,6 +18,7 @@
 	],
 	"scripts": {
 		"build": "tsc",
+		"type-check": "tsc --noEmit",
 		"clean": "rm -rf dist",
 		"format": "biome format --write",
 		"lint": "biome lint --write",
